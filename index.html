@@ -1,0 +1,2607 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>صلاح الديب - نظام إدارة متكامل</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/cairo@5.0.18/index.min.css">
+<style>
+  * { font-family: 'Cairo', sans-serif; }
+  body { background: #0f172a; }
+  .sidebar-item.active { background: linear-gradient(90deg, #d4af37, #b8941f); color: #0f172a; font-weight: 700; }
+  .sidebar-item:hover:not(.active) { background: rgba(212, 175, 55, 0.15); }
+  .card-gradient { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+  .gold-gradient { background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%); }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: #1e293b; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  input, select, textarea { color: #e2e8f0 !important; }
+  input::placeholder { color: #64748b !important; }
+  .product-card { transition: all 0.3s; }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); }
+  .cashier-item { transition: all 0.2s; }
+  .cashier-item:hover { background: rgba(212, 175, 55, 0.1); }
+  .login-bg {
+    background: radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .slide-in { animation: slideIn 0.3s ease-out; }
+  .role-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; }
+  .barcode-input {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(30, 41, 59, 1) 100%);
+    border: 2px solid rgba(212, 175, 55, 0.3);
+  }
+  .barcode-input:focus-within { border-color: #d4af37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+  .barcode-scanner { animation: scan 2s ease-in-out infinite; }
+  @keyframes scan { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(10px); } }
+  @keyframes checkmark { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+  .checkmark-anim { animation: checkmark 0.5s ease-out; }
+  .shift-open { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+  .shift-closed { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+  .shift-active { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.85; } }
+  .barcode-label {
+    width: 260px; height: 140px; background: white; color: black !important;
+    padding: 8px; border: 1.5px solid #000; border-radius: 4px;
+    display: inline-flex; flex-direction: column; justify-content: space-between;
+    box-sizing: border-box; margin: 3px; vertical-align: top;
+    page-break-inside: avoid; overflow: hidden;
+  }
+  .barcode-label * { color: black !important; }
+  .barcode-label .bl-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #333; padding-bottom: 3px; font-size: 9px; }
+  .barcode-label .bl-header .shop { font-weight: bold; font-size: 10px; }
+  .barcode-label .bl-product { font-size: 12px; font-weight: bold; text-align: center; padding: 2px 0; line-height: 1.2; word-break: break-word; }
+  .barcode-label .bl-price { background: #000; color: white !important; font-size: 14px; font-weight: bold; text-align: center; padding: 3px; border-radius: 3px; letter-spacing: 1px; }
+  .barcode-label .bl-barcode { text-align: center; line-height: 0; }
+  .barcode-label .bl-barcode svg { max-width: 100%; height: 35px !important; }
+  .barcode-label .bl-code { font-size: 9px; text-align: center; font-family: 'Courier New', monospace; letter-spacing: 0.5px; margin-top: 1px; }
+  .barcode-label.large { width: 320px; height: 170px; }
+  .barcode-label.large .bl-product { font-size: 15px; }
+  .barcode-label.large .bl-price { font-size: 18px; }
+  .barcode-label.large .bl-barcode svg { height: 45px !important; }
+  .barcode-label.large .bl-code { font-size: 11px; }
+  @media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea { position: absolute; top: 0; right: 0; left: 0; width: 100%; background: white !important; padding: 10mm; margin: 0; }
+    .no-print { display: none !important; }
+    .barcode-label { margin: 2mm; }
+    @page { size: A4; margin: 5mm; }
+  }
+  .receipt-paper { background: white; color: black; font-family: 'Cairo', sans-serif; max-width: 320px; margin: 0 auto; padding: 20px; border: 2px dashed #d4af37; }
+  .receipt-paper * { color: black !important; }
+  .receipt-header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 10px; margin-bottom: 10px; }
+  .receipt-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+  .receipt-items { border-top: 1px dashed #333; border-bottom: 1px dashed #333; padding: 8px 0; margin: 8px 0; }
+  .receipt-item { padding: 4px 0; font-size: 12px; }
+  .receipt-total { font-size: 18px; font-weight: bold; text-align: center; padding: 8px 0; border-top: 2px dashed #333; margin-top: 8px; }
+  .receipt-footer { text-align: center; font-size: 11px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333; }
+  .labels-preview { background: #f0f0f0; padding: 15px; border-radius: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; max-height: 500px; overflow-y: auto; }
+  .film-card { transition: all 0.3s; }
+  .film-card:hover { transform: translateY(-2px); border-color: #d4af37 !important; }
+</style>
+</head>
+<body class="text-slate-200 min-h-screen">
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-bg min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 gold-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/30">
+        <svg class="w-12 h-12 text-slate-900" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+      </div>
+      <h1 class="text-3xl font-bold text-white mb-2">صلاح الديب</h1>
+      <p class="text-amber-400">كماليات السيارات والفوسفور</p>
+      <p class="text-slate-400 text-sm mt-2">نكلا - تحت الكوبري العالوي</p>
+    </div>
+    <div class="card-gradient border border-slate-700 rounded-2xl p-6 shadow-2xl">
+      <h2 class="text-xl font-bold text-white mb-5 text-center">تسجيل الدخول</h2>
+      <div class="space-y-4">
+        <input type="text" id="loginUser" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-amber-500" placeholder="اسم المستخدم" value="admin">
+        <input type="password" id="loginPass" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-amber-500" placeholder="كلمة المرور" value="admin">
+        <div id="loginError" class="hidden bg-red-500/20 border border-red-500/30 text-red-400 text-sm p-3 rounded-lg"></div>
+        <button onclick="doLogin()" class="w-full gold-gradient text-slate-900 font-bold py-3 rounded-lg hover:opacity-90 transition shadow-lg shadow-amber-500/20">دخول</button>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden flex min-h-screen">
+  <aside id="sidebar" class="w-64 bg-slate-900 border-l border-slate-700 flex flex-col">
+    <div class="p-5 border-b border-slate-700">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 gold-gradient rounded-xl flex items-center justify-center">
+          <svg class="w-7 h-7 text-slate-900" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white">صلاح الديب</h1>
+          <p class="text-xs text-amber-400">نظام إدارة متكامل</p>
+        </div>
+      </div>
+    </div>
+    <nav id="sidebarNav" class="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin"></nav>
+    <div class="p-4 border-t border-slate-700">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-full gold-gradient flex items-center justify-center font-bold text-slate-900" id="userAvatar">م</div>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-white" id="userName">المدير</p>
+          <p class="text-xs text-amber-400" id="userRole">مدير النظام</p>
+        </div>
+      </div>
+      <button onclick="logout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg py-2 text-sm transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        تسجيل خروج
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto">
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-700 px-6 py-4 sticky top-0 z-10">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 id="pageTitle" class="text-2xl font-bold text-white">لوحة التحكم</h2>
+          <p id="pageSubtitle" class="text-sm text-slate-400">نظرة عامة على أداء المحل</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div id="shiftIndicator" class="hidden"></div>
+          <div class="text-left">
+            <p class="text-xs text-slate-400" id="currentDate"></p>
+            <p class="text-sm font-semibold text-white" id="currentTime"></p>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="p-6" id="pageContainer"></div>
+  </main>
+</div>
+
+<div id="printArea" class="hidden"></div>
+<div id="modalContainer"></div>
+
+<div id="toast" class="hidden fixed bottom-6 left-6 bg-green-500 text-white px-5 py-3 rounded-lg shadow-lg z-[100] flex items-center gap-2">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+  <span id="toastMsg">تم الحفظ بنجاح</span>
+</div>
+
+<script>
+// ============ STATE ============
+let state = {
+  users: [], products: [], customers: [], sales: [], activityLog: [],
+  shifts: [], returns: [],
+  filmTypes: [], // فلام الحماية
+  settings: { name: 'صلاح الديب', address: 'نكلا - تحت الكوبري العالوي', phone: '', currency: 'ج.م', receiptMessage: 'شكراً لزيارتكم - نتمنى لكم قيادة آمنة' },
+  barcodeCounter: 10000
+};
+let currentUser = null;
+let saleItemsList = [];
+
+const PERMISSIONS = {
+  dashboard: { label: 'لوحة التحكم', icon: 'home' },
+  storefront: { label: 'الواجهة الرئيسية', icon: 'store' },
+  cashier: { label: 'نظام الكاشير', icon: 'cash' },
+  shift: { label: 'جرد الشيفت', icon: 'shift' },
+  products: { label: 'المنتجات', icon: 'box' },
+  films: { label: 'فلام الحماية', icon: 'film' },
+  barcodePrint: { label: 'طباعة الباركود', icon: 'barcode' },
+  sales: { label: 'المبيعات', icon: 'cart' },
+  returns: { label: 'الاسترجاعات', icon: 'return' },
+  customers: { label: 'العملاء', icon: 'users' },
+  inventory: { label: 'المخزون', icon: 'warehouse' },
+  reports: { label: 'التقارير', icon: 'chart' },
+  users: { label: 'إدارة المستخدمين', icon: 'shield' },
+  activity: { label: 'سجل النشاطات', icon: 'history' },
+  settings: { label: 'الإعدادات', icon: 'settings' }
+};
+
+const ROLE_PRESETS = {
+  admin: { label: 'مدير النظام', color: 'bg-red-500/20 text-red-400', permissions: Object.keys(PERMISSIONS) },
+  manager: { label: 'مدير', color: 'bg-amber-500/20 text-amber-400', permissions: ['dashboard','storefront','cashier','shift','products','films','sales','returns','customers','inventory','barcodePrint','reports','activity'] },
+  cashier: { label: 'كاشير', color: 'bg-blue-500/20 text-blue-400', permissions: ['dashboard','storefront','cashier','shift','customers'] },
+  stock: { label: 'أمين مخزن', color: 'bg-green-500/20 text-green-400', permissions: ['dashboard','storefront','products','inventory','barcodePrint'] }
+};
+
+// ============ BARCODE GEN ============
+function generatePieceCode(baseBarcode, pieceIndex) { return `${baseBarcode}-${String(pieceIndex).padStart(3, '0')}`; }
+function generateProductBarcode() { return '628' + Date.now().toString().slice(-10); }
+
+// ============ STORAGE ============
+function load() {
+  const saved = localStorage.getItem('salahDeebShop_v7');
+  if (saved) {
+    state = JSON.parse(saved);
+    if (!state.shifts) state.shifts = [];
+    if (!state.returns) state.returns = [];
+    if (!state.filmTypes) state.filmTypes = [];
+    if (!state.barcodeCounter) state.barcodeCounter = 10000;
+    state.products.forEach(p => {
+      if (!p.pieceCodes) {
+        p.pieceCodes = [];
+        for (let i = 1; i <= p.qty; i++) p.pieceCodes.push(generatePieceCode(p.barcode, i));
+        p.nextPieceIndex = p.qty + 1;
+      }
+    });
+  } else {
+    state.users = [{ id: 1, username: 'admin', password: 'admin', fullName: 'صلاح الديب', role: 'admin', permissions: Object.keys(PERMISSIONS), active: true, createdAt: new Date().toISOString(), createdBy: 'system' }];
+    
+    const baseProducts = [
+      { name: 'زيت موبيل 10W-40', category: 'زيوت', cost: 180, price: 250, qty: 45, min: 10, image: '🛢️' },
+      { name: 'زيت شل 5W-30', category: 'زيوت', cost: 220, price: 300, qty: 32, min: 10, image: '🛢️' },
+      { name: 'فلتر زيت تويوتا', category: 'فلاتر', cost: 45, price: 75, qty: 60, min: 15, image: '🔧' },
+      { name: 'فلتر هواء هيونداي', category: 'فلاتر', cost: 55, price: 90, qty: 38, min: 10, image: '🔧' },
+      { name: 'فوسفور أمامي يسار', category: 'فوسفور', cost: 350, price: 500, qty: 8, min: 5, image: '💡' },
+      { name: 'فوسفور خلفي يمين', category: 'فوسفور', cost: 280, price: 400, qty: 12, min: 5, image: '💡' },
+      { name: 'مساحات زجاج', category: 'إكسسوارات', cost: 35, price: 60, qty: 50, min: 10, image: '🚗' },
+      { name: 'معطر سيارة', category: 'إكسسوارات', cost: 25, price: 45, qty: 100, min: 20, image: '🌸' },
+      { name: 'إطار ميشلان 205/55', category: 'إطارات', cost: 850, price: 1100, qty: 16, min: 8, image: '⚫' },
+      { name: 'بطارية 60 أمبير', category: 'بطاريات', cost: 950, price: 1300, qty: 4, min: 5, image: '🔋' },
+    ];
+    state.products = baseProducts.map((p, idx) => {
+      const barcode = '6281000000' + String(idx + 1).padStart(3, '0');
+      const pieceCodes = [];
+      for (let i = 1; i <= p.qty; i++) pieceCodes.push(generatePieceCode(barcode, i));
+      return { ...p, id: idx + 1, barcode, pieceCodes, nextPieceIndex: p.qty + 1 };
+    });
+    
+    state.customers = [
+      { id: 1, name: 'أحمد محمد', phone: '01012345678', car: 'تويوتا كامري 2019', notes: 'عميل دائم', totalPurchases: 2500 },
+      { id: 2, name: 'محمود علي', phone: '01198765432', car: 'هيونداي إلنترا 2020', notes: '', totalPurchases: 1800 },
+      { id: 3, name: 'خالد إبراهيم', phone: '01255566778', car: 'كيا سيراتو 2021', notes: 'يفضل زيوت شل', totalPurchases: 3200 },
+    ];
+    
+    // فلام الحماية - أنواع وأسعار
+    state.filmTypes = [
+      { id: 1, name: 'فلام شفاف عادي', type: 'شفاف', vehicle: 'سيارة', priceFront: 800, priceFull: 2500, description: 'فلام شفاف للحماية من الخدوش', warranty: '1 سنة' },
+      { id: 2, name: 'فلام سيراميك شفاف', type: 'سيراميك', vehicle: 'سيارة', priceFront: 1500, priceFull: 4500, description: 'فلام سيراميك عالي الجودة', warranty: '3 سنوات' },
+      { id: 3, name: 'فلام كربون', type: 'كربون', vehicle: 'سيارة', priceFront: 1200, priceFull: 3500, description: 'فلام كربون متين', warranty: '2 سنة' },
+      { id: 4, name: 'فلام معتم (Dark)', type: 'معتم', vehicle: 'سيارة', priceFront: 600, priceFull: 2000, description: 'فلام معتم للخصوصية', warranty: '1 سنة' },
+      { id: 5, name: 'فلام حماية PPF', type: 'PPF', vehicle: 'سيارة', priceFront: 3000, priceFull: 8000, description: 'فلام حماية طلاء متقدم', warranty: '5 سنوات' },
+      { id: 6, name: 'فلام شفاف موتوسيكل', type: 'شفاف', vehicle: 'موتوسيكل', priceFront: 400, priceFull: 1200, description: 'فلام شفاف للدراجات النارية', warranty: '1 سنة' },
+      { id: 7, name: 'فلام سيراميك موتوسيكل', type: 'سيراميك', vehicle: 'موتوسيكل', priceFront: 800, priceFull: 2200, description: 'فلام سيراميك للموتوسيكل', warranty: '2 سنة' },
+      { id: 8, name: 'فلام معتم موتوسيكل', type: 'معتم', vehicle: 'موتوسيكل', priceFront: 350, priceFull: 1000, description: 'فلام معتم للموتوسيكل', warranty: '1 سنة' },
+      { id: 9, name: 'فلام كشافات LED', type: 'كشافات', vehicle: 'سيارة', priceFront: 500, priceFull: 900, description: 'فلام حماية لكشافات السيارة', warranty: '1 سنة' },
+      { id: 10, name: 'فلام كشافات موتوسيكل', type: 'كشافات', vehicle: 'موتوسيكل', priceFront: 250, priceFull: 450, description: 'فلام حماية لكشافات الموتوسيكل', warranty: '1 سنة' },
+    ];
+    
+    const today = new Date();
+    state.sales = [
+      { id: 1001, cashierId: 1, cashierName: 'صلاح الديب', customerId: 1, customerName: 'أحمد محمد', date: new Date(today.getTime() - 86400000*2).toISOString(), items: [{productId:1, name:'زيت موبيل 10W-40', qty:2, price:250, pieceCodes:['6281000000001-001']}], subtotal: 575, discount: 0, total: 575, payment: 'نقدي', status: 'مكتملة' },
+      { id: 1002, cashierId: 1, cashierName: 'صلاح الديب', customerId: 2, customerName: 'محمود علي', date: new Date(today.getTime() - 86400000).toISOString(), items: [{productId:2, name:'زيت شل 5W-30', qty:1, price:300, pieceCodes:['6281000000002-001']}], subtotal: 390, discount: 0, total: 390, payment: 'آجل', status: 'مكتملة' },
+      { id: 1003, cashierId: 1, cashierName: 'صلاح الديب', customerId: 3, customerName: 'خالد إبراهيم', date: new Date().toISOString(), items: [{productId:5, name:'فوسفور أمامي يسار', qty:2, price:500, pieceCodes:['6281000000005-001']}], subtotal: 1000, discount: 0, total: 1000, payment: 'نقدي', status: 'مكتملة' },
+    ];
+    
+    state.shifts = [];
+    state.returns = [];
+    save();
+  }
+}
+
+function save() { localStorage.setItem('salahDeebShop_v7', JSON.stringify(state)); }
+
+function logActivity(action, details = '') {
+  state.activityLog.unshift({
+    id: Date.now() + Math.random(),
+    userId: currentUser.id, userName: currentUser.fullName, userRole: currentUser.role,
+    action, details, timestamp: new Date().toISOString()
+  });
+  if (state.activityLog.length > 500) state.activityLog = state.activityLog.slice(0, 500);
+  save();
+}
+
+// ============ SHIFT MANAGEMENT ============
+function getCurrentShift() {
+  return state.shifts.find(s => s.cashierId === currentUser.id && !s.closedAt);
+}
+
+function openShiftModal() {
+  const current = getCurrentShift();
+  if (current) {
+    toast('لديك شيفت مفتوح بالفعل', true);
+    return;
+  }
+  showModal('فتح شيفت جديد', `
+    <div class="space-y-4">
+      <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-sm text-green-300">
+        💡 سيتم تسجيل المبلغ المستلم في بداية الشيفت. عند الإغلاق سيتم مقارنته بالمبيعات.
+      </div>
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">المبلغ المستلم في الدرج (بداية الشيفت)</label>
+        <input type="number" id="shiftStartAmount" value="0" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-lg focus:outline-none focus:border-amber-500">
+        <p class="text-xs text-slate-500 mt-1">المبلغ الموجود في الدرج قبل بدء العمل</p>
+      </div>
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">ملاحظات (اختياري)</label>
+        <textarea id="shiftNotes" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></textarea>
+      </div>
+      <button onclick="openShift()" class="w-full shift-open text-white font-bold py-3 rounded-lg hover:opacity-90 transition">فتح الشيفت</button>
+    </div>
+  `);
+}
+
+function openShift() {
+  const startAmount = parseFloat(document.getElementById('shiftStartAmount').value) || 0;
+  const notes = document.getElementById('shiftNotes').value.trim();
+  
+  const shift = {
+    id: Date.now(),
+    cashierId: currentUser.id,
+    cashierName: currentUser.fullName,
+    openedAt: new Date().toISOString(),
+    closedAt: null,
+    startAmount,
+    notes,
+    salesIds: [],
+    returnsIds: [],
+    totalSales: 0,
+    totalReturns: 0,
+    endAmount: 0,
+    difference: 0
+  };
+  
+  state.shifts.push(shift);
+  logActivity('فتح شيفت', `شيفت جديد - مبلغ البداية: ${startAmount} ${state.settings.currency}`);
+  save();
+  closeModal();
+  toast('تم فتح الشيفت بنجاح');
+  updateShiftIndicator();
+  showPage('cashier');
+}
+
+function closeShiftModal() {
+  const current = getCurrentShift();
+  if (!current) { toast('لا يوجد شيفت مفتوح', true); return; }
+  
+  const duration = Math.floor((Date.now() - new Date(current.openedAt).getTime()) / 60000);
+  const hours = Math.floor(duration / 60);
+  const mins = duration % 60;
+  
+  // Calculate expected amount
+  const cashSales = state.sales.filter(s => current.salesIds.includes(s.id) && s.payment === 'نقدي' && s.status !== 'مسترجعة').reduce((sum, s) => sum + s.total, 0);
+  const expectedAmount = current.startAmount + cashSales;
+  
+  showModal('إغلاق الشيفت', `
+    <div class="space-y-4">
+      <div class="shift-active text-white rounded-xl p-4 mb-3">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs opacity-80">مدة الشيفت</p>
+            <p class="font-bold">${hours} ساعة و ${mins} دقيقة</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-slate-800/50 rounded-lg p-3">
+          <p class="text-xs text-slate-400">المبلغ المستلم</p>
+          <p class="text-xl font-bold text-white">${current.startAmount.toLocaleString()} ${state.settings.currency}</p>
+        </div>
+        <div class="bg-slate-800/50 rounded-lg p-3">
+          <p class="text-xs text-slate-400">عدد الفواتير</p>
+          <p class="text-xl font-bold text-amber-400">${current.salesIds.length}</p>
+        </div>
+        <div class="bg-slate-800/50 rounded-lg p-3">
+          <p class="text-xs text-slate-400">إجمالي المبيعات</p>
+          <p class="text-xl font-bold text-green-400">${current.totalSales.toLocaleString()} ${state.settings.currency}</p>
+        </div>
+        <div class="bg-slate-800/50 rounded-lg p-3">
+          <p class="text-xs text-slate-400">الاسترجاعات</p>
+          <p class="text-xl font-bold text-red-400">${current.returnsIds.length}</p>
+        </div>
+      </div>
+      
+      <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-slate-300">المبلغ المتوقع في الدرج:</span>
+          <span class="text-xl font-bold text-amber-400">${expectedAmount.toLocaleString()} ${state.settings.currency}</span>
+        </div>
+        <p class="text-xs text-slate-400">= ${current.startAmount} (مستلم) + ${cashSales} (مبيعات نقدية)</p>
+      </div>
+      
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">المبلغ الفعلي المُسلم في الدرج</label>
+        <input type="number" id="shiftEndAmount" value="${expectedAmount}" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-lg focus:outline-none focus:border-amber-500" oninput="updateShiftDiff(${expectedAmount})">
+      </div>
+      
+      <div id="shiftDiffDisplay" class="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-center">
+        <p class="text-sm text-green-400">✓ المبلغ مطابق</p>
+      </div>
+      
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">ملاحظات الإغلاق</label>
+        <textarea id="shiftCloseNotes" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></textarea>
+      </div>
+      
+      <button onclick="closeShift(${expectedAmount})" class="w-full shift-closed text-white font-bold py-3 rounded-lg hover:opacity-90 transition">إغلاق الشيفت</button>
+    </div>
+  `);
+}
+
+function updateShiftDiff(expected) {
+  const actual = parseFloat(document.getElementById('shiftEndAmount').value) || 0;
+  const diff = actual - expected;
+  const display = document.getElementById('shiftDiffDisplay');
+  if (diff === 0) {
+    display.className = 'bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-center';
+    display.innerHTML = '<p class="text-sm text-green-400">✓ المبلغ مطابق</p>';
+  } else if (diff > 0) {
+    display.className = 'bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-center';
+    display.innerHTML = `<p class="text-sm text-blue-400">↑ زيادة: ${diff.toLocaleString()} ${state.settings.currency}</p>`;
+  } else {
+    display.className = 'bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center';
+    display.innerHTML = `<p class="text-sm text-red-400">↓ نقصان: ${Math.abs(diff).toLocaleString()} ${state.settings.currency}</p>`;
+  }
+}
+
+function closeShift(expected) {
+  const current = getCurrentShift();
+  if (!current) return;
+  
+  const endAmount = parseFloat(document.getElementById('shiftEndAmount').value) || 0;
+  const notes = document.getElementById('shiftCloseNotes').value.trim();
+  
+  current.closedAt = new Date().toISOString();
+  current.endAmount = endAmount;
+  current.difference = endAmount - expected;
+  current.closeNotes = notes;
+  
+  logActivity('إغلاق شيفت', `الفرق: ${current.difference} ${state.settings.currency} - ${current.salesIds.length} فاتورة`);
+  save();
+  closeModal();
+  toast('تم إغلاق الشيفت بنجاح');
+  updateShiftIndicator();
+  showShiftReport(current.id);
+}
+
+function showShiftReport(shiftId) {
+  const shift = state.shifts.find(s => s.id === shiftId);
+  if (!shift) return;
+  
+  const duration = Math.floor((new Date(shift.closedAt || Date.now()) - new Date(shift.openedAt)) / 60000);
+  const hours = Math.floor(duration / 60);
+  const mins = duration % 60;
+  
+  const shiftSales = state.sales.filter(s => shift.salesIds.includes(s.id));
+  const shiftReturns = state.returns.filter(r => shift.returnsIds.includes(r.id));
+  
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `
+    <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin slide-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="text-xl font-bold text-white">تقرير الشيفت</h3>
+          <p class="text-sm text-slate-400">${shift.cashierName} - ${new Date(shift.openedAt).toLocaleString('ar-EG')}</p>
+        </div>
+        <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <div class="bg-slate-800/50 rounded-lg p-3 text-center">
+          <p class="text-xs text-slate-400">المدة</p>
+          <p class="text-lg font-bold text-white">${hours}س ${mins}د</p>
+        </div>
+        <div class="bg-slate-800/50 rounded-lg p-3 text-center">
+          <p class="text-xs text-slate-400">المستلم</p>
+          <p class="text-lg font-bold text-white">${shift.startAmount.toLocaleString()}</p>
+        </div>
+        <div class="bg-slate-800/50 rounded-lg p-3 text-center">
+          <p class="text-xs text-slate-400">المبيعات</p>
+          <p class="text-lg font-bold text-green-400">${shift.totalSales.toLocaleString()}</p>
+        </div>
+        <div class="bg-slate-800/50 rounded-lg p-3 text-center">
+          <p class="text-xs text-slate-400">الفرق</p>
+          <p class="text-lg font-bold ${shift.difference === 0 ? 'text-green-400' : shift.difference > 0 ? 'text-blue-400' : 'text-red-400'}">${shift.difference >= 0 ? '+' : ''}${shift.difference.toLocaleString()}</p>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <h4 class="text-sm font-bold text-white mb-2">الفواتير المباعة (${shiftSales.length})</h4>
+        <div class="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+          ${shiftSales.map(s => `
+            <div class="flex items-center justify-between bg-slate-800/50 rounded-lg p-2 text-sm">
+              <div>
+                <span class="text-amber-400 font-mono">#${s.id}</span>
+                <span class="text-white mx-2">${s.customerName}</span>
+                <span class="text-xs text-slate-400">${s.payment}</span>
+              </div>
+              <span class="text-green-400 font-bold">${s.total.toLocaleString()}</span>
+            </div>
+          `).join('') || '<p class="text-slate-500 text-sm text-center py-3">لا توجد فواتير</p>'}
+        </div>
+      </div>
+      
+      ${shiftReturns.length > 0 ? `
+        <div class="mb-4">
+          <h4 class="text-sm font-bold text-white mb-2">الاسترجاعات (${shiftReturns.length})</h4>
+          <div class="space-y-2 max-h-32 overflow-y-auto scrollbar-thin">
+            ${shiftReturns.map(r => `
+              <div class="flex items-center justify-between bg-red-500/10 border border-red-500/20 rounded-lg p-2 text-sm">
+                <span class="text-red-400 font-mono">استرجاع #${r.id}</span>
+                <span class="text-red-400 font-bold">-${r.total.toLocaleString()}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${shift.closeNotes ? `<div class="bg-slate-800/50 rounded-lg p-3 text-sm text-slate-300"><span class="text-slate-400">ملاحظات:</span> ${shift.closeNotes}</div>` : ''}
+      
+      <button onclick="this.closest('.fixed').remove()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-lg mt-4 transition">إغلاق</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function updateShiftIndicator() {
+  const indicator = document.getElementById('shiftIndicator');
+  const current = getCurrentShift();
+  if (current && hasPermission('shift')) {
+    const cashSales = state.sales.filter(s => current.salesIds.includes(s.id) && s.payment === 'نقدي' && s.status !== 'مسترجعة').reduce((sum, s) => sum + s.total, 0);
+    indicator.className = '';
+    indicator.innerHTML = `
+      <div class="shift-active text-white rounded-lg px-3 py-2 flex items-center gap-2 cursor-pointer" onclick="closeShiftModal()">
+        <div class="w-2 h-2 bg-white rounded-full pulse-dot"></div>
+        <div class="text-xs">
+          <p class="font-bold">شيفت مفتوح</p>
+          <p class="opacity-80">${current.salesIds.length} فاتورة - ${cashSales.toLocaleString()} ${state.settings.currency}</p>
+        </div>
+      </div>
+    `;
+  } else {
+    indicator.innerHTML = '';
+  }
+}
+
+// ============ RETURNS ============
+function openReturnModal(saleId) {
+  const sale = state.sales.find(s => s.id === saleId);
+  if (!sale) return;
+  if (sale.status === 'مسترجعة') { toast('هذه الفاتورة مسترجعة بالفعل', true); return; }
+  
+  window._returningSale = sale;
+  window._returnItems = sale.items.map(it => ({ ...it, selected: true, returnQty: it.qty }));
+  
+  renderReturnModal();
+}
+
+function renderReturnModal() {
+  const sale = window._returningSale;
+  const items = window._returnItems;
+  
+  const totalRefund = items.reduce((sum, it) => sum + (it.selected ? it.returnQty * it.price : 0), 0);
+  
+  showModal(`استرجاع فاتورة #${sale.id}`, `
+    <div class="space-y-4">
+      <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm text-amber-300">
+        ⚠ سيتم إرجاع المنتجات للمخزون واسترداد المبلغ
+      </div>
+      
+      <div class="bg-slate-800/50 rounded-lg p-3 text-sm space-y-1">
+        <div class="flex justify-between"><span class="text-slate-400">العميل:</span><span class="text-white">${sale.customerName}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">التاريخ:</span><span class="text-white">${new Date(sale.date).toLocaleString('ar-EG')}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">الدفع:</span><span class="text-white">${sale.payment}</span></div>
+      </div>
+      
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">نوع الاسترجاع</label>
+        <select id="returnReason" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+          <option value="عيب في المنتج">عيب في المنتج</option>
+          <option value="خطأ في الطلب">خطأ في الطلب</option>
+          <option value="رغبة العميل">رغبة العميل</option>
+          <option value="منتج غير مطابق">منتج غير مطابق</option>
+          <option value="أخرى">أخرى</option>
+        </select>
+      </div>
+      
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">اختر المنتجات المراد استرجاعها</label>
+        <div class="space-y-2">
+          ${items.map((it, i) => `
+            <div class="bg-slate-800/50 rounded-lg p-3 ${it.selected ? 'border border-amber-500/50' : 'border border-slate-700 opacity-60'}">
+              <div class="flex items-center gap-2 mb-2">
+                <input type="checkbox" ${it.selected ? 'checked' : ''} onchange="toggleReturnItem(${i}, this.checked)" class="w-4 h-4 accent-amber-500">
+                <span class="text-sm text-white flex-1">${it.name}</span>
+                <span class="text-xs text-amber-400">${it.price} ${state.settings.currency}</span>
+              </div>
+              ${it.selected ? `
+                <div class="flex items-center gap-2 mr-6">
+                  <span class="text-xs text-slate-400">الكمية:</span>
+                  <input type="number" min="1" max="${it.qty}" value="${it.returnQty}" onchange="updateReturnQty(${i}, this.value)" class="w-16 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-center">
+                  <span class="text-xs text-slate-500">من ${it.qty}</span>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">سبب الاسترجاع / ملاحظات</label>
+        <textarea id="returnNotes" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></textarea>
+      </div>
+      
+      <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center justify-between">
+        <span class="text-white font-semibold">المبلغ المسترد:</span>
+        <span class="text-2xl font-bold text-red-400">${totalRefund.toLocaleString()} ${state.settings.currency}</span>
+      </div>
+      
+      <button onclick="confirmReturn(${sale.id})" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg transition">تأكيد الاسترجاع</button>
+    </div>
+  `);
+}
+
+function toggleReturnItem(idx, checked) {
+  window._returnItems[idx].selected = checked;
+  if (checked) window._returnItems[idx].returnQty = window._returnItems[idx].qty;
+  renderReturnModal();
+}
+
+function updateReturnQty(idx, value) {
+  const max = window._returnItems[idx].qty;
+  let qty = parseInt(value) || 1;
+  if (qty < 1) qty = 1;
+  if (qty > max) qty = max;
+  window._returnItems[idx].returnQty = qty;
+  renderReturnModal();
+}
+
+function confirmReturn(saleId) {
+  const sale = state.sales.find(s => s.id === saleId);
+  if (!sale) return;
+  
+  const items = window._returnItems.filter(it => it.selected && it.returnQty > 0);
+  if (items.length === 0) { toast('الرجاء اختيار منتج واحد على الأقل', true); return; }
+  
+  const reason = document.getElementById('returnReason').value;
+  const notes = document.getElementById('returnNotes').value.trim();
+  const totalRefund = items.reduce((sum, it) => sum + (it.returnQty * it.price), 0);
+  
+  // Return items to stock
+  items.forEach(it => {
+    const p = state.products.find(x => x.id === it.productId);
+    if (p) {
+      p.qty += it.returnQty;
+      // Add back piece codes
+      if (!p.pieceCodes) p.pieceCodes = [];
+      for (let i = 0; i < it.returnQty; i++) {
+        const newCode = generatePieceCode(p.barcode, p.nextPieceIndex || (p.qty + 1));
+        p.pieceCodes.push(newCode);
+        p.nextPieceIndex = (p.nextPieceIndex || (p.qty + 1)) + 1;
+      }
+    }
+  });
+  
+  // Check if full return
+  const isFullReturn = items.every(it => it.returnQty === it.qty) && items.length === sale.items.length;
+  
+  // Update sale status
+  if (isFullReturn) {
+    sale.status = 'مسترجعة';
+  } else {
+    sale.status = 'مسترجعة جزئياً';
+  }
+  
+  // Update customer purchases
+  if (sale.customerId) {
+    const customer = state.customers.find(c => c.id === sale.customerId);
+    if (customer) customer.totalPurchases = Math.max(0, (customer.totalPurchases || 0) - totalRefund);
+  }
+  
+  // Create return record
+  const returnRecord = {
+    id: Date.now(),
+    saleId: sale.id,
+    cashierId: currentUser.id,
+    cashierName: currentUser.fullName,
+    customerId: sale.customerId,
+    customerName: sale.customerName,
+    date: new Date().toISOString(),
+    items: items.map(it => ({ productId: it.productId, name: it.name, qty: it.returnQty, price: it.price })),
+    total: totalRefund,
+    reason,
+    notes,
+    fullReturn: isFullReturn
+  };
+  
+  state.returns.push(returnRecord);
+  
+  // Update current shift
+  const current = getCurrentShift();
+  if (current) {
+    current.returnsIds.push(returnRecord.id);
+  }
+  
+  logActivity('استرجاع فاتورة', `فاتورة #${sale.id} - ${totalRefund.toLocaleString()} ${state.settings.currency} - ${reason}`);
+  save();
+  
+  closeModal();
+  delete window._returningSale;
+  delete window._returnItems;
+  
+  toast('تم الاسترجاع بنجاح');
+  showReturnReceipt(returnRecord.id);
+}
+
+function showReturnReceipt(returnId) {
+  const r = state.returns.find(x => x.id === returnId);
+  if (!r) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `
+    <div class="bg-slate-900 border border-red-500/30 rounded-2xl p-6 w-full max-w-md slide-in">
+      <div class="text-center mb-5">
+        <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+          <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white">إيصال استرجاع</h3>
+        <p class="text-red-400 font-mono mt-1">#${r.id}</p>
+      </div>
+      
+      <div class="bg-slate-800/50 rounded-lg p-3 text-sm space-y-2 mb-4">
+        <div class="flex justify-between"><span class="text-slate-400">العميل:</span><span class="text-white">${r.customerName}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">الفاتورة الأصلية:</span><span class="text-amber-400">#${r.saleId}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">الكاشير:</span><span class="text-white">${r.cashierName}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">السبب:</span><span class="text-white">${r.reason}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">التاريخ:</span><span class="text-white">${new Date(r.date).toLocaleString('ar-EG')}</span></div>
+      </div>
+      
+      <div class="border-t border-slate-700 pt-3 mb-4">
+        <p class="text-xs text-slate-400 mb-2">المنتجات المسترجعة:</p>
+        ${r.items.map(it => `
+          <div class="flex justify-between text-sm py-1">
+            <span class="text-white">${it.name} × ${it.qty}</span>
+            <span class="text-red-400">${(it.qty * it.price).toLocaleString()}</span>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center justify-between mb-4">
+        <span class="text-white font-bold">المبلغ المسترد:</span>
+        <span class="text-2xl font-bold text-red-400">${r.total.toLocaleString()} ${state.settings.currency}</span>
+      </div>
+      
+      <button onclick="this.closest('.fixed').remove()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-lg transition">إغلاق</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// ============ AUTH ============
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const user = state.users.find(x => x.username === u && x.password === p && x.active);
+  if (!user) {
+    const err = document.getElementById('loginError');
+    err.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+    err.classList.remove('hidden');
+    return;
+  }
+  currentUser = user;
+  logActivity('تسجيل دخول', `دخول المستخدم ${user.fullName}`);
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  initApp();
+}
+
+function logout() {
+  if (!confirm('هل تريد تسجيل الخروج؟')) return;
+  logActivity('تسجيل خروج', `خروج المستخدم ${currentUser.fullName}`);
+  currentUser = null;
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').classList.add('hidden');
+}
+
+function hasPermission(perm) { return currentUser && currentUser.permissions && currentUser.permissions.includes(perm); }
+
+function initApp() {
+  document.getElementById('userName').textContent = currentUser.fullName;
+  document.getElementById('userRole').textContent = ROLE_PRESETS[currentUser.role]?.label || currentUser.role;
+  document.getElementById('userAvatar').textContent = currentUser.fullName.charAt(0);
+  buildSidebar();
+  updateShiftIndicator();
+  const first = currentUser.permissions.find(p => p) || 'dashboard';
+  showPage(first);
+}
+
+function buildSidebar() {
+  const icons = {
+    home: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
+    store: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18l-2 9H5L3 3zm0 0L1 1h2m2 11v10h14V12M9 21V12m6 0v9"/>',
+    cash: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>',
+    shift: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>',
+    box: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>',
+    film: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>',
+    cart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>',
+    return: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>',
+    users: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>',
+    warehouse: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>',
+    barcode: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14M21 5v14"/>',
+    chart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>',
+    shield: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
+    history: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    settings: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+  };
+  const nav = document.getElementById('sidebarNav');
+  nav.innerHTML = currentUser.permissions.map(perm => `
+    <button onclick="showPage('${perm}')" data-page="${perm}" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[PERMISSIONS[perm].icon]}</svg>
+      <span>${PERMISSIONS[perm].label}</span>
+    </button>
+  `).join('');
+}
+
+function showPage(page) {
+  if (!hasPermission(page)) { toast('ليس لديك صلاحية للوصول لهذه الصفحة', true); return; }
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`[data-page="${page}"]`);
+  if (btn) btn.classList.add('active');
+  const titles = {
+    dashboard: ['لوحة التحكم', 'نظرة عامة على أداء المحل'],
+    storefront: ['الواجهة الرئيسية', 'عرض المنتجات للعملاء'],
+    cashier: ['نظام الكاشير', 'نقطة البيع الاحترافية POS'],
+    shift: ['جرد الشيفت', 'فتح وإغلاق شيفت الكاشير'],
+    products: ['المنتجات', 'إدارة منتجات المحل'],
+    films: ['فلام الحماية', 'أنواع وأسعار فلام السيارات والموتوسيكلات'],
+    barcodePrint: ['طباعة الباركود', 'طباعة ملصقات الباركود'],
+    sales: ['المبيعات', 'إدارة الفواتير والمبيعات'],
+    returns: ['الاسترجاعات', 'سجل الفواتير المسترجعة'],
+    customers: ['العملاء', 'قاعدة بيانات العملاء'],
+    inventory: ['المخزون', 'متابعة المخزون والتنبيهات'],
+    reports: ['التقارير', 'تحليلات وإحصائيات مفصلة'],
+    users: ['إدارة المستخدمين', 'إضافة وصلاحيات المستخدمين'],
+    activity: ['سجل النشاطات', 'تتبع جميع العمليات'],
+    settings: ['الإعدادات', 'إعدادات المحل والنظام']
+  };
+  document.getElementById('pageTitle').textContent = titles[page][0];
+  document.getElementById('pageSubtitle').textContent = titles[page][1];
+  const renderers = { dashboard: renderDashboard, storefront: renderStorefront, cashier: renderCashier, shift: renderShift, products: renderProducts, films: renderFilms, barcodePrint: renderBarcodePrint, sales: renderSales, returns: renderReturns, customers: renderCustomers, inventory: renderInventory, reports: renderReports, users: renderUsers, activity: renderActivity, settings: renderSettings };
+  if (renderers[page]) renderers[page]();
+}
+
+// ============ DASHBOARD ============
+function renderDashboard() {
+  const totalSales = state.sales.filter(s => s.status !== 'مسترجعة').reduce((s, x) => s + x.total, 0);
+  const lowStock = state.products.filter(p => p.qty <= p.min).length;
+  const todaySales = state.sales.filter(s => new Date(s.date).toDateString() === new Date().toDateString() && s.status !== 'مسترجعة').reduce((s,x)=>s+x.total,0);
+  const totalReturns = state.returns.reduce((s, r) => s + r.total, 0);
+  const currentShift = getCurrentShift();
+  
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5 hover:border-amber-500 transition">
+          <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <p class="text-slate-400 text-sm">إجمالي المبيعات</p>
+          <p class="text-2xl font-bold text-white mt-1">${totalSales.toLocaleString()} ${state.settings.currency}</p>
+          <p class="text-xs text-green-400 mt-1">اليوم: ${todaySales.toLocaleString()}</p>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5 hover:border-amber-500 transition">
+          <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          </div>
+          <p class="text-slate-400 text-sm">عدد الفواتير</p>
+          <p class="text-2xl font-bold text-white mt-1">${state.sales.filter(s=>s.status!=='مسترجعة').length}</p>
+          <p class="text-xs text-red-400 mt-1">استرجاع: ${state.returns.length}</p>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5 hover:border-amber-500 transition">
+          <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14M21 5v14"/></svg>
+          </div>
+          <p class="text-slate-400 text-sm">أكواد الباركود</p>
+          <p class="text-2xl font-bold text-white mt-1">${state.products.reduce((s, p) => s + (p.pieceCodes?.length || 0), 0).toLocaleString()}</p>
+          <p class="text-xs text-slate-400 mt-1">${state.products.length} منتج</p>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5 hover:border-amber-500 transition">
+          <div class="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+          </div>
+          <p class="text-slate-400 text-sm">إجمالي الاسترجاعات</p>
+          <p class="text-2xl font-bold text-white mt-1">${totalReturns.toLocaleString()} ${state.settings.currency}</p>
+          <p class="text-xs text-slate-400 mt-1">${state.returns.length} عملية</p>
+        </div>
+      </div>
+      
+      ${hasPermission('shift') ? `
+        <div class="mb-6 card-gradient border ${currentShift ? 'border-blue-500/30' : 'border-slate-700'} rounded-2xl p-5">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 ${currentShift ? 'shift-active' : 'bg-slate-700'} rounded-xl flex items-center justify-center">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-white">${currentShift ? 'شيفت مفتوح الآن' : 'لا يوجد شيفت مفتوح'}</h3>
+                <p class="text-sm text-slate-400">${currentShift ? `مفتوح منذ ${new Date(currentShift.openedAt).toLocaleString('ar-EG')} - ${currentShift.salesIds.length} فاتورة` : 'افتح شيفت جديد لبدء العمل'}</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              ${currentShift ? `
+                <button onclick="showShiftReport(${currentShift.id})" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm transition">عرض التقرير</button>
+                <button onclick="closeShiftModal()" class="shift-closed text-white px-4 py-2 rounded-lg text-sm transition flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg>
+                  إغلاق الشيفت
+                </button>
+              ` : `
+                <button onclick="openShiftModal()" class="shift-open text-white px-4 py-2 rounded-lg text-sm transition flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  فتح شيفت جديد
+                </button>
+              `}
+            </div>
+          </div>
+        </div>
+      ` : ''}
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <h3 class="text-lg font-bold text-white mb-4">آخر المبيعات</h3>
+          <div class="space-y-3">
+            ${[...state.sales].filter(s=>s.status!=='مسترجعة').sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5).map(s => `
+              <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                <div>
+                  <p class="text-sm font-semibold text-white">${s.customerName}</p>
+                  <p class="text-xs text-slate-400">بواسطة: ${s.cashierName}</p>
+                </div>
+                <div class="text-left">
+                  <p class="text-sm font-bold text-amber-400">${s.total.toLocaleString()} ${state.settings.currency}</p>
+                  <p class="text-xs text-slate-500">${new Date(s.date).toLocaleDateString('ar-EG')}</p>
+                </div>
+              </div>
+            `).join('') || '<p class="text-slate-500 text-sm text-center py-4">لا توجد مبيعات</p>'}
+          </div>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <h3 class="text-lg font-bold text-white mb-4">آخر النشاطات</h3>
+          <div class="space-y-3">
+            ${state.activityLog.slice(0,6).map(a => `
+              <div class="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg">
+                <div class="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-white font-semibold truncate">${a.action}</p>
+                  <p class="text-xs text-slate-400 truncate">${a.userName} • ${new Date(a.timestamp).toLocaleString('ar-EG')}</p>
+                </div>
+              </div>
+            `).join('') || '<p class="text-slate-500 text-sm text-center py-4">لا توجد نشاطات</p>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============ SHIFT PAGE ============
+function renderShift() {
+  const myShifts = state.shifts.filter(s => s.cashierId === currentUser.id).sort((a,b) => new Date(b.openedAt) - new Date(a.openedAt));
+  const allShifts = hasPermission('users') ? [...state.shifts].sort((a,b) => new Date(b.openedAt) - new Date(a.openedAt)) : myShifts;
+  const current = getCurrentShift();
+  
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <p class="text-slate-400 text-sm">إجمالي الشيفتات</p>
+          <p class="text-3xl font-bold text-white mt-2">${state.shifts.length}</p>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <p class="text-slate-400 text-sm">إجمالي المبيعات (كل الشيفتات)</p>
+          <p class="text-3xl font-bold text-green-400 mt-2">${state.shifts.reduce((s,sh)=>s+sh.totalSales,0).toLocaleString()} ${state.settings.currency}</p>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <p class="text-slate-400 text-sm">حالة الشيفت الحالي</p>
+          <p class="text-3xl font-bold mt-2 ${current ? 'text-blue-400' : 'text-slate-500'}">${current ? 'مفتوح' : 'مغلق'}</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <h3 class="text-lg font-bold text-white">سجل الشيفتات</h3>
+        ${current ? `
+          <div class="flex gap-2">
+            <button onclick="showShiftReport(${current.id})" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm transition">تقرير الشيفت الحالي</button>
+            <button onclick="closeShiftModal()" class="shift-closed text-white px-4 py-2 rounded-lg text-sm transition">إغلاق الشيفت</button>
+          </div>
+        ` : `
+          <button onclick="openShiftModal()" class="shift-open text-white px-5 py-2 rounded-lg text-sm transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            فتح شيفت جديد
+          </button>
+        `}
+      </div>
+      
+      <div class="card-gradient border border-slate-700 rounded-2xl overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-slate-800/50">
+            <tr class="text-right">
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الكاشير</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الفتح</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الإغلاق</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">المستلم</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">المبيعات</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الفواتير</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الفرق</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الحالة</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700">
+            ${allShifts.length ? allShifts.map(s => `
+              <tr class="hover:bg-slate-800/30 transition cursor-pointer" onclick="showShiftReport(${s.id})">
+                <td class="px-4 py-3 text-white font-semibold">${s.cashierName}</td>
+                <td class="px-4 py-3 text-slate-400 text-sm">${new Date(s.openedAt).toLocaleString('ar-EG')}</td>
+                <td class="px-4 py-3 text-slate-400 text-sm">${s.closedAt ? new Date(s.closedAt).toLocaleString('ar-EG') : '—'}</td>
+                <td class="px-4 py-3 text-white">${s.startAmount.toLocaleString()}</td>
+                <td class="px-4 py-3 text-green-400 font-bold">${s.totalSales.toLocaleString()}</td>
+                <td class="px-4 py-3 text-amber-400">${s.salesIds.length}</td>
+                <td class="px-4 py-3 ${s.difference === 0 ? 'text-green-400' : s.difference > 0 ? 'text-blue-400' : 'text-red-400'} font-bold">${s.closedAt ? (s.difference >= 0 ? '+' : '') + s.difference.toLocaleString() : '—'}</td>
+                <td class="px-4 py-3">
+                  ${s.closedAt 
+                    ? '<span class="text-xs bg-slate-500/20 text-slate-400 px-2 py-1 rounded-full">مغلق</span>'
+                    : '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">مفتوح</span>'}
+                </td>
+              </tr>
+            `).join('') : `<tr><td colspan="8" class="px-4 py-10 text-center text-slate-500">لا توجد شيفتات</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ============ STOREFRONT ============
+function renderStorefront() {
+  const categories = ['الكل', ...new Set(state.products.map(p => p.category))];
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="mb-6 relative overflow-hidden rounded-2xl border border-amber-500/30" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1a1208 100%);">
+        <div class="p-8 flex items-center justify-between">
+          <div>
+            <h3 class="text-3xl font-bold text-white mb-2">مرحباً بكم في ${state.settings.name}</h3>
+            <p class="text-amber-400 mb-1">أفضل كماليات السيارات والفوسفور</p>
+            <p class="text-slate-400 text-sm flex items-center gap-2 mt-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span>${state.settings.address}</span>
+            </p>
+          </div>
+          <div class="hidden md:block text-7xl opacity-30">🚗</div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+        <div class="flex items-center gap-2 flex-wrap" id="categoryFilters">
+          ${categories.map((c, i) => `<button onclick="filterStorefront('${c}')" class="cat-btn ${i===0?'gold-gradient text-slate-900 font-bold':'bg-slate-800 text-slate-300'} px-4 py-2 rounded-lg text-sm transition hover:opacity-90">${c}</button>`).join('')}
+        </div>
+        <div class="relative">
+          <input type="text" id="storefrontSearch" oninput="filterStorefront(document.querySelector('.cat-btn.gold-gradient')?.textContent || 'الكل')" placeholder="بحث..." class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:border-amber-500 w-64">
+          <svg class="w-4 h-4 absolute right-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+      </div>
+      <div id="storefrontGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+    </div>
+  `;
+  filterStorefront('الكل');
+}
+
+function filterStorefront(cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.className = b.textContent === cat ? 'cat-btn gold-gradient text-slate-900 font-bold px-4 py-2 rounded-lg text-sm transition hover:opacity-90' : 'cat-btn bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-sm transition hover:opacity-90';
+  });
+  const search = (document.getElementById('storefrontSearch')?.value || '').toLowerCase();
+  let products = state.products.filter(p => p.qty > 0);
+  if (cat !== 'الكل') products = products.filter(p => p.category === cat);
+  if (search) products = products.filter(p => p.name.toLowerCase().includes(search) || (p.barcode && p.barcode.includes(search)));
+  document.getElementById('storefrontGrid').innerHTML = products.length ? products.map(p => `
+    <div class="product-card card-gradient border border-slate-700 rounded-2xl overflow-hidden hover:border-amber-500">
+      <div class="h-32 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-6xl">${p.image || '📦'}</div>
+      <div class="p-4">
+        <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">${p.category}</span>
+        <h4 class="font-bold text-white mt-2 text-sm line-clamp-2" style="min-height: 40px;">${p.name}</h4>
+        <div class="flex items-center justify-between mt-3">
+          <div>
+            <p class="text-lg font-bold text-amber-400">${p.price.toLocaleString()}</p>
+            <p class="text-xs text-slate-500">${state.settings.currency}</p>
+          </div>
+          <span class="text-xs ${p.qty <= p.min ? 'text-red-400' : 'text-green-400'}">${p.qty} متوفر</span>
+        </div>
+      </div>
+    </div>
+  `).join('') : '<p class="text-slate-500 text-center py-10 col-span-full">لا توجد منتجات</p>';
+}
+
+// ============ CASHIER ============
+function renderCashier() {
+  const currentShift = getCurrentShift();
+  
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      ${hasPermission('shift') && !currentShift ? `
+        <div class="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center justify-between flex-wrap gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div>
+              <p class="text-white font-semibold">يجب فتح شيفت قبل البيع</p>
+              <p class="text-xs text-slate-400">افتح شيفت جديد لتسجيل المبيعات</p>
+            </div>
+          </div>
+          <button onclick="openShiftModal()" class="shift-open text-white px-5 py-2 rounded-lg text-sm transition">فتح شيفت</button>
+        </div>
+      ` : ''}
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 card-gradient border border-slate-700 rounded-2xl p-5">
+          <div class="mb-4 p-4 barcode-input rounded-xl">
+            <div class="flex items-center gap-3 mb-2">
+              <svg class="w-6 h-6 text-amber-400 barcode-scanner" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14M21 5v14"/></svg>
+              <h3 class="text-lg font-bold text-white">مسح الباركود</h3>
+            </div>
+            <input type="text" id="barcodeInput" placeholder="امسح الباركود ثم Enter..." class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-lg font-mono focus:outline-none focus:border-amber-500" onkeypress="handleBarcodeScan(event)">
+          </div>
+          <div class="flex items-center gap-3 mb-4 flex-wrap">
+            <div class="relative flex-1 min-w-[200px]">
+              <input type="text" id="cashierSearch" oninput="renderCashierProducts()" placeholder="بحث..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:border-amber-500">
+              <svg class="w-4 h-4 absolute right-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <select id="cashierCategory" onchange="renderCashierProducts()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+              <option value="">كل الأصناف</option>
+              ${[...new Set(state.products.map(p=>p.category))].map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+          </div>
+          <div id="cashierProducts" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto scrollbar-thin"></div>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-700">
+            <h3 class="text-lg font-bold text-white">🛒 السلة</h3>
+            <button onclick="clearCart()" class="text-xs text-red-400 hover:text-red-300">مسح</button>
+          </div>
+          <div class="mb-3">
+            <label class="block text-xs text-slate-400 mb-1">العميل</label>
+            <select id="cashierCustomer" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+              <option value="">عميل نقدي</option>
+              ${state.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+            </select>
+          </div>
+          <div id="cartItems" class="flex-1 overflow-y-auto scrollbar-thin space-y-2 mb-4 max-h-[300px]"></div>
+          <div class="border-t border-slate-700 pt-4 space-y-2">
+            <div class="flex items-center justify-between text-sm"><span class="text-slate-400">المجموع</span><span class="text-white" id="cartSubtotal">0</span></div>
+            <div class="flex items-center justify-between text-sm"><span class="text-slate-400">الخصم</span><input type="number" id="cartDiscount" value="0" min="0" oninput="updateCartTotal()" class="w-20 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-left text-sm focus:outline-none focus:border-amber-500"></div>
+            <div class="flex items-center justify-between text-lg font-bold pt-2 border-t border-slate-700"><span class="text-white">الإجمالي</span><span class="text-amber-400" id="cartTotal">0 ${state.settings.currency}</span></div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-2">
+            <select id="cartPayment" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+              <option value="نقدي">💵 نقدي</option>
+              <option value="آجل">📝 آجل</option>
+              <option value="تحويل">💳 تحويل</option>
+            </select>
+            <button onclick="completeSale()" class="gold-gradient text-slate-900 font-bold py-2 rounded-lg hover:opacity-90 transition">إتمام البيع</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  saleItemsList = [];
+  renderCashierProducts();
+  renderCart();
+  setTimeout(() => { const b = document.getElementById('barcodeInput'); if (b) b.focus(); }, 100);
+}
+
+function handleBarcodeScan(event) {
+  if (event.key === 'Enter') {
+    const barcode = document.getElementById('barcodeInput').value.trim();
+    if (!barcode) return;
+    let product = null, pieceCode = null;
+    for (const p of state.products) {
+      if (p.pieceCodes && p.pieceCodes.includes(barcode)) { product = p; pieceCode = barcode; break; }
+    }
+    if (!product) {
+      product = state.products.find(p => p.barcode === barcode);
+      if (product && product.pieceCodes && product.pieceCodes.length > 0) pieceCode = product.pieceCodes[0];
+    }
+    if (product) {
+      addToCart(product.id, pieceCode);
+      document.getElementById('barcodeInput').value = '';
+      toast(`تمت إضافة: ${product.name}`);
+    } else toast('الباركود غير موجود', true);
+  }
+}
+
+function renderCashierProducts() {
+  const search = (document.getElementById('cashierSearch')?.value || '').toLowerCase();
+  const cat = document.getElementById('cashierCategory')?.value || '';
+  let products = state.products.filter(p => p.qty > 0);
+  if (cat) products = products.filter(p => p.category === cat);
+  if (search) products = products.filter(p => p.name.toLowerCase().includes(search));
+  document.getElementById('cashierProducts').innerHTML = products.length ? products.map(p => `
+    <div onclick="addToCart(${p.id})" class="cashier-item cursor-pointer card-gradient border border-slate-700 rounded-xl p-3 hover:border-amber-500">
+      <div class="text-4xl text-center mb-2">${p.image || '📦'}</div>
+      <h4 class="text-sm font-bold text-white line-clamp-1">${p.name}</h4>
+      <div class="flex items-center justify-between mt-2">
+        <span class="text-amber-400 font-bold text-sm">${p.price} ${state.settings.currency}</span>
+        <span class="text-xs text-slate-500">${p.qty}</span>
+      </div>
+    </div>
+  `).join('') : '<p class="text-slate-500 text-center py-10 col-span-full">لا توجد منتجات</p>';
+}
+
+function addToCart(productId, pieceCode = null) {
+  const p = state.products.find(x => x.id === productId);
+  if (!p) return;
+  const existing = saleItemsList.find(it => it.productId === productId);
+  if (existing) {
+    if (existing.qty >= p.qty) { toast('الكمية غير كافية', true); return; }
+    existing.qty++;
+    if (p.pieceCodes && p.pieceCodes.length > existing.qty - 1) existing.pieceCodes.push(p.pieceCodes[existing.qty - 1]);
+  } else {
+    const firstPiece = pieceCode || (p.pieceCodes && p.pieceCodes.length > 0 ? p.pieceCodes[0] : null);
+    saleItemsList.push({ productId, name: p.name, price: p.price, qty: 1, maxQty: p.qty, pieceCodes: firstPiece ? [firstPiece] : [] });
+  }
+  renderCart();
+}
+
+function updateCartQty(idx, newQty) {
+  newQty = parseInt(newQty) || 1;
+  if (newQty < 1) newQty = 1;
+  if (newQty > saleItemsList[idx].maxQty) { toast('الكمية غير كافية', true); newQty = saleItemsList[idx].maxQty; }
+  saleItemsList[idx].qty = newQty;
+  const p = state.products.find(x => x.id === saleItemsList[idx].productId);
+  if (p && p.pieceCodes) saleItemsList[idx].pieceCodes = p.pieceCodes.slice(0, newQty);
+  renderCart();
+}
+
+function removeFromCart(idx) { saleItemsList.splice(idx, 1); renderCart(); }
+function clearCart() { saleItemsList = []; const d = document.getElementById('cartDiscount'); if (d) d.value = 0; renderCart(); }
+
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  if (!container) return;
+  container.innerHTML = saleItemsList.length ? saleItemsList.map((it, i) => `
+    <div class="bg-slate-800/50 rounded-lg p-3 flex items-center gap-2">
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-white truncate">${it.name}</p>
+        <p class="text-xs text-slate-400">${it.price} × ${it.qty} = ${(it.price * it.qty).toLocaleString()}</p>
+      </div>
+      <div class="flex items-center gap-1">
+        <button onclick="updateCartQty(${i}, ${it.qty - 1})" class="w-6 h-6 bg-slate-700 hover:bg-slate-600 rounded text-white">-</button>
+        <input type="number" value="${it.qty}" min="1" onchange="updateCartQty(${i}, this.value)" class="w-12 bg-slate-700 border border-slate-600 rounded px-1 py-0.5 text-center text-sm">
+        <button onclick="updateCartQty(${i}, ${it.qty + 1})" class="w-6 h-6 bg-slate-700 hover:bg-slate-600 rounded text-white">+</button>
+        <button onclick="removeFromCart(${i})" class="w-6 h-6 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded mr-1">×</button>
+      </div>
+    </div>
+  `).join('') : '<p class="text-slate-500 text-center py-8 text-sm">السلة فارغة<br>امسح الباركود أو اضغط على منتج</p>';
+  updateCartTotal();
+}
+
+function updateCartTotal() {
+  const subtotal = saleItemsList.reduce((s, it) => s + (it.price * it.qty), 0);
+  const discount = parseFloat(document.getElementById('cartDiscount')?.value || 0);
+  const total = Math.max(0, subtotal - discount);
+  const sub = document.getElementById('cartSubtotal');
+  const tot = document.getElementById('cartTotal');
+  if (sub) sub.textContent = subtotal.toLocaleString() + ' ' + state.settings.currency;
+  if (tot) tot.textContent = total.toLocaleString() + ' ' + state.settings.currency;
+}
+
+function completeSale() {
+  if (saleItemsList.length === 0) { toast('السلة فارغة', true); return; }
+  
+  const currentShift = getCurrentShift();
+  if (hasPermission('shift') && !currentShift) {
+    toast('يجب فتح شيفت أولاً', true);
+    return;
+  }
+  
+  const customerId = document.getElementById('cashierCustomer').value;
+  const customer = state.customers.find(c => c.id == customerId);
+  const discount = parseFloat(document.getElementById('cartDiscount').value) || 0;
+  const subtotal = saleItemsList.reduce((s, it) => s + (it.price * it.qty), 0);
+  const total = Math.max(0, subtotal - discount);
+  
+  saleItemsList.forEach(it => {
+    const p = state.products.find(x => x.id === it.productId);
+    if (p) {
+      p.qty -= it.qty;
+      if (it.pieceCodes && it.pieceCodes.length > 0 && p.pieceCodes) {
+        it.pieceCodes.forEach(pc => {
+          const idx = p.pieceCodes.indexOf(pc);
+          if (idx > -1) p.pieceCodes.splice(idx, 1);
+        });
+      }
+    }
+  });
+  
+  const sale = {
+    id: 1000 + state.sales.length + 1,
+    cashierId: currentUser.id, cashierName: currentUser.fullName,
+    customerId: customer ? customer.id : null, customerName: customer ? customer.name : 'عميل نقدي',
+    date: new Date().toISOString(),
+    items: saleItemsList.map(it => ({ productId: it.productId, name: it.name, qty: it.qty, price: it.price, pieceCodes: it.pieceCodes || [] })),
+    subtotal, discount, total,
+    payment: document.getElementById('cartPayment').value,
+    status: 'مكتملة'
+  };
+  
+  state.sales.push(sale);
+  if (customer) customer.totalPurchases = (customer.totalPurchases || 0) + total;
+  
+  // Update shift
+  if (currentShift) {
+    currentShift.salesIds.push(sale.id);
+    currentShift.totalSales += total;
+  }
+  
+  logActivity('عملية بيع', `فاتورة #${sale.id} بقيمة ${total.toLocaleString()} ${state.settings.currency}`);
+  save();
+  updateShiftIndicator();
+  showSaleCompleteDialog(sale);
+}
+
+function showSaleCompleteDialog(sale) {
+  const modal = document.createElement('div');
+  modal.id = 'saleCompleteModal';
+  modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4';
+  modal.innerHTML = `
+    <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-6 w-full max-w-md slide-in shadow-2xl shadow-amber-500/20">
+      <div class="text-center mb-6">
+        <div class="w-20 h-20 gold-gradient rounded-full flex items-center justify-center mx-auto mb-4 checkmark-anim shadow-lg shadow-amber-500/30">
+          <svg class="w-10 h-10 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-2">تمت عملية البيع بنجاح!</h3>
+        <p class="text-slate-400">فاتورة رقم <span class="text-amber-400 font-bold">#${sale.id}</span></p>
+        <p class="text-2xl font-bold text-amber-400 mt-2">${sale.total.toLocaleString()} ${state.settings.currency}</p>
+      </div>
+      <div class="bg-slate-800/50 rounded-xl p-4 mb-5 space-y-2">
+        <div class="flex justify-between text-sm"><span class="text-slate-400">العميل:</span><span class="text-white">${sale.customerName}</span></div>
+        <div class="flex justify-between text-sm"><span class="text-slate-400">عدد المنتجات:</span><span class="text-white">${sale.items.length}</span></div>
+        <div class="flex justify-between text-sm"><span class="text-slate-400">طريقة الدفع:</span><span class="text-white">${sale.payment}</span></div>
+      </div>
+      <div class="mb-4">
+        <p class="text-center text-slate-300 mb-3 font-semibold">هل تريد طباعة الفاتورة؟</p>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="printSaleReceipt(${sale.id})" class="gold-gradient text-slate-900 font-bold py-3 rounded-lg hover:opacity-90 transition flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            طباعة
+          </button>
+          <button onclick="closeSaleDialog()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-lg transition">إغلاق</button>
+        </div>
+      </div>
+      <button onclick="viewSaleReceipt(${sale.id})" class="w-full text-amber-400 hover:text-amber-300 text-sm py-2 transition">عرض الفاتورة</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function closeSaleDialog() {
+  const m = document.getElementById('saleCompleteModal');
+  if (m) m.remove();
+  saleItemsList = [];
+  renderCashier();
+}
+
+// ============ RECEIPT ============
+function buildReceiptHTML(sale) {
+  const itemsHtml = sale.items.map(it => {
+    const piecesHtml = it.pieceCodes && it.pieceCodes.length > 0 ? `<div style="font-size:10px; color:#666; margin-top:2px;">أكواد: ${it.pieceCodes.join(', ')}</div>` : '';
+    return `<div class="receipt-item"><div style="display:flex; justify-content:space-between;"><span>${it.name}</span><span>${(it.qty * it.price).toLocaleString()}</span></div><div style="display:flex; justify-content:space-between; font-size:11px; color:#666;"><span>${it.qty} × ${it.price.toLocaleString()}</span></div>${piecesHtml}</div>`;
+  }).join('');
+  return `<div class="receipt-paper"><div class="receipt-header"><h2 style="font-size:20px; font-weight:bold; margin:0;">${state.settings.name}</h2><p style="font-size:12px; margin:4px 0;">كماليات السيارات والفوسفور</p><p style="font-size:11px; margin:2px 0;">${state.settings.address}</p>${state.settings.phone ? `<p style="font-size:11px; margin:2px 0;">📞 ${state.settings.phone}</p>` : ''}<p style="font-size:13px; font-weight:bold; margin-top:8px; color:#d4af37 !important;">فاتورة #${sale.id}</p></div><div style="font-size:12px; margin-bottom:8px;"><div class="receipt-row"><span>التاريخ:</span><span>${new Date(sale.date).toLocaleString('ar-EG')}</span></div><div class="receipt-row"><span>الكاشير:</span><span>${sale.cashierName}</span></div><div class="receipt-row"><span>العميل:</span><span>${sale.customerName}</span></div><div class="receipt-row"><span>الدفع:</span><span>${sale.payment}</span></div></div><div class="receipt-items"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:12px; border-bottom:1px dashed #333; padding-bottom:4px; margin-bottom:4px;"><span>المنتج</span><span>الإجمالي</span></div>${itemsHtml}</div><div style="font-size:13px;"><div class="receipt-row"><span>المجموع الفرعي:</span><span>${sale.subtotal.toLocaleString()} ${state.settings.currency}</span></div>${sale.discount > 0 ? `<div class="receipt-row"><span>الخصم:</span><span style="color:#dc2626 !important;">-${sale.discount.toLocaleString()} ${state.settings.currency}</span></div>` : ''}</div><div class="receipt-total">الإجمالي: ${sale.total.toLocaleString()} ${state.settings.currency}</div><div class="receipt-footer"><p style="margin:4px 0; font-weight:bold;">${state.settings.receiptMessage || 'شكراً لزيارتكم'}</p></div></div>`;
+}
+
+function viewSaleReceipt(saleId) {
+  const sale = state.sales.find(s => s.id === saleId);
+  if (!sale) return;
+  const dialog = document.getElementById('saleCompleteModal');
+  if (dialog) dialog.remove();
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `<div class="bg-slate-800 border border-amber-500/30 rounded-2xl p-4 w-full max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin slide-in"><div class="flex items-center justify-between mb-3"><h3 class="text-lg font-bold text-white">معاينة الفاتورة</h3><button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><div>${buildReceiptHTML(sale)}</div><div class="flex gap-2 mt-4"><button onclick="printSaleReceipt(${sale.id})" class="flex-1 gold-gradient text-slate-900 font-bold py-2 rounded-lg hover:opacity-90 transition">طباعة</button><button onclick="this.closest('.fixed').remove()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-lg transition">إغلاق</button></div></div>`;
+  document.body.appendChild(modal);
+}
+
+function printSaleReceipt(saleId) {
+  const sale = state.sales.find(s => s.id === saleId);
+  if (!sale) return;
+  const dialog = document.getElementById('saleCompleteModal');
+  if (dialog) dialog.remove();
+  document.querySelectorAll('.fixed').forEach(m => { if (m.id !== 'toast') m.remove(); });
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = buildReceiptHTML(sale);
+  printArea.classList.remove('hidden');
+  logActivity('طباعة فاتورة', `فاتورة #${sale.id}`);
+  save();
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      printArea.classList.add('hidden');
+      printArea.innerHTML = '';
+      saleItemsList = [];
+      renderCashier();
+    }, 500);
+  }, 100);
+}
+
+// ============ FILMS (فلام الحماية) ============
+function renderFilms() {
+  const vehicles = ['الكل', 'سيارة', 'موتوسيكل'];
+  const types = ['الكل', ...new Set(state.filmTypes.map(f => f.type))];
+  
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="mb-6 relative overflow-hidden rounded-2xl border border-amber-500/30" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1a1208 100%);">
+        <div class="p-8 flex items-center justify-between">
+          <div>
+            <h3 class="text-3xl font-bold text-white mb-2">🎬 فلام الحماية</h3>
+            <p class="text-amber-400 mb-1">أنواع وأسعار فلام السيارات والموتوسيكلات</p>
+            <p class="text-slate-400 text-sm mt-2">فلام شفاف، سيراميك، كربون، معتم، PPF، كشافات</p>
+          </div>
+          <div class="hidden md:block text-7xl opacity-30">🎬</div>
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <select id="filmVehicleFilter" onchange="renderFilmsGrid()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+            ${vehicles.map(v => `<option value="${v}">${v}</option>`).join('')}
+          </select>
+          <select id="filmTypeFilter" onchange="renderFilmsGrid()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+            ${types.map(t => `<option value="${t}">${t}</option>`).join('')}
+          </select>
+        </div>
+        ${hasPermission('films') ? `
+          <button onclick="openFilmModal()" class="gold-gradient text-slate-900 font-bold px-5 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            إضافة نوع فلام
+          </button>
+        ` : ''}
+      </div>
+      
+      <div id="filmsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+  `;
+  renderFilmsGrid();
+}
+
+function renderFilmsGrid() {
+  const vehicle = document.getElementById('filmVehicleFilter')?.value || 'الكل';
+  const type = document.getElementById('filmTypeFilter')?.value || 'الكل';
+  
+  let films = [...state.filmTypes];
+  if (vehicle !== 'الكل') films = films.filter(f => f.vehicle === vehicle);
+  if (type !== 'الكل') films = films.filter(f => f.type === type);
+  
+  const vehicleIcon = (v) => v === 'سيارة' ? '🚗' : '🏍️';
+  const typeColors = {
+    'شفاف': 'bg-blue-500/20 text-blue-400',
+    'سيراميك': 'bg-purple-500/20 text-purple-400',
+    'كربون': 'bg-slate-500/20 text-slate-300',
+    'معتم': 'bg-gray-500/20 text-gray-400',
+    'PPF': 'bg-amber-500/20 text-amber-400',
+    'كشافات': 'bg-yellow-500/20 text-yellow-400'
+  };
+  
+  document.getElementById('filmsGrid').innerHTML = films.length ? films.map(f => `
+    <div class="film-card card-gradient border border-slate-700 rounded-2xl p-5 hover:border-amber-500 transition">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="text-4xl">${vehicleIcon(f.vehicle)}</div>
+          <div>
+            <h4 class="font-bold text-white">${f.name}</h4>
+            <div class="flex gap-1 mt-1 flex-wrap">
+              <span class="text-xs ${typeColors[f.type] || 'bg-slate-500/20 text-slate-300'} px-2 py-0.5 rounded-full">${f.type}</span>
+              <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">${f.vehicle}</span>
+            </div>
+          </div>
+        </div>
+        ${hasPermission('films') ? `
+          <div class="flex gap-1">
+            <button onclick="editFilm(${f.id})" class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </button>
+            <button onclick="deleteFilm(${f.id})" class="p-1.5 text-red-400 hover:bg-red-500/20 rounded">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        ` : ''}
+      </div>
+      
+      <p class="text-sm text-slate-400 mb-3">${f.description}</p>
+      
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="bg-slate-800/50 rounded-lg p-2 text-center">
+          <p class="text-xs text-slate-400">سعر الأمامي</p>
+          <p class="text-lg font-bold text-amber-400">${f.priceFront.toLocaleString()}</p>
+          <p class="text-xs text-slate-500">${state.settings.currency}</p>
+        </div>
+        <div class="bg-slate-800/50 rounded-lg p-2 text-center">
+          <p class="text-xs text-slate-400">سعر الكامل</p>
+          <p class="text-lg font-bold text-green-400">${f.priceFull.toLocaleString()}</p>
+          <p class="text-xs text-slate-500">${state.settings.currency}</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+        <span class="text-xs text-slate-400">🛡️ الضمان: <span class="text-white">${f.warranty}</span></span>
+      </div>
+    </div>
+  `).join('') : '<p class="text-slate-500 text-center py-10 col-span-3">لا توجد أنواع فلام</p>';
+}
+
+let editingFilmId = null;
+
+function openFilmModal() {
+  editingFilmId = null;
+  showModal('إضافة نوع فلام', `
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">اسم الفلام</label>
+        <input type="text" id="f-name" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">نوع الفلام</label>
+          <select id="f-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+            <option value="شفاف">شفاف</option>
+            <option value="سيراميك">سيراميك</option>
+            <option value="كربون">كربون</option>
+            <option value="معتم">معتم</option>
+            <option value="PPF">PPF</option>
+            <option value="كشافات">كشافات</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">نوع المركبة</label>
+          <select id="f-vehicle" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+            <option value="سيارة">سيارة</option>
+            <option value="موتوسيكل">موتوسيكل</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">سعر الأمامي فقط</label>
+          <input type="number" id="f-priceFront" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+        </div>
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">سعر الكامل</label>
+          <input type="number" id="f-priceFull" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">مدة الضمان</label>
+        <input type="text" id="f-warranty" value="1 سنة" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+      </div>
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">الوصف</label>
+        <textarea id="f-description" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></textarea>
+      </div>
+      <button onclick="saveFilm()" class="w-full gold-gradient text-slate-900 font-bold py-3 rounded-lg hover:opacity-90 transition">حفظ</button>
+    </div>
+  `);
+}
+
+function editFilm(id) {
+  const f = state.filmTypes.find(x => x.id === id);
+  if (!f) return;
+  editingFilmId = id;
+  openFilmModal();
+  setTimeout(() => {
+    document.getElementById('f-name').value = f.name;
+    document.getElementById('f-type').value = f.type;
+    document.getElementById('f-vehicle').value = f.vehicle;
+    document.getElementById('f-priceFront').value = f.priceFront;
+    document.getElementById('f-priceFull').value = f.priceFull;
+    document.getElementById('f-warranty').value = f.warranty;
+    document.getElementById('f-description').value = f.description;
+    document.querySelector('#modalContainer h3').textContent = 'تعديل نوع الفلام';
+  }, 50);
+}
+
+function saveFilm() {
+  const name = document.getElementById('f-name').value.trim();
+  const type = document.getElementById('f-type').value;
+  const vehicle = document.getElementById('f-vehicle').value;
+  const priceFront = parseFloat(document.getElementById('f-priceFront').value) || 0;
+  const priceFull = parseFloat(document.getElementById('f-priceFull').value) || 0;
+  const warranty = document.getElementById('f-warranty').value.trim();
+  const description = document.getElementById('f-description').value.trim();
+  
+  if (!name || priceFront <= 0) { toast('الرجاء إدخال البيانات المطلوبة', true); return; }
+  
+  if (editingFilmId) {
+    const f = state.filmTypes.find(x => x.id === editingFilmId);
+    Object.assign(f, { name, type, vehicle, priceFront, priceFull, warranty, description });
+    logActivity('تعديل فلام', `تم تعديل: ${name}`);
+  } else {
+    state.filmTypes.push({ id: Date.now(), name, type, vehicle, priceFront, priceFull, warranty, description });
+    logActivity('إضافة فلام', `تم إضافة: ${name}`);
+  }
+  save();
+  closeModal();
+  renderFilmsGrid();
+  toast('تم حفظ الفلام بنجاح');
+}
+
+function deleteFilm(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا النوع؟')) return;
+  const f = state.filmTypes.find(x => x.id === id);
+  state.filmTypes = state.filmTypes.filter(x => x.id !== id);
+  logActivity('حذف فلام', `تم حذف: ${f?.name || id}`);
+  save();
+  renderFilmsGrid();
+  toast('تم حذف الفلام');
+}
+
+// ============ RETURNS PAGE ============
+function renderReturns() {
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <p class="text-slate-400 text-sm">إجمالي الاسترجاعات</p>
+          <p class="text-3xl font-bold text-white mt-2">${state.returns.length}</p>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <p class="text-slate-400 text-sm">إجمالي المبالغ المستردة</p>
+          <p class="text-3xl font-bold text-red-400 mt-2">${state.returns.reduce((s,r)=>s+r.total,0).toLocaleString()} ${state.settings.currency}</p>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <p class="text-slate-400 text-sm">استرجاعات اليوم</p>
+          <p class="text-3xl font-bold text-white mt-2">${state.returns.filter(r => new Date(r.date).toDateString() === new Date().toDateString()).length}</p>
+        </div>
+      </div>
+      
+      <div class="card-gradient border border-slate-700 rounded-2xl overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-slate-800/50">
+            <tr class="text-right">
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">رقم الاسترجاع</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الفاتورة</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">العميل</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الكاشير</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">السبب</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">المبلغ</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">التاريخ</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700">
+            ${state.returns.length ? [...state.returns].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r => `
+              <tr class="hover:bg-slate-800/30 transition">
+                <td class="px-4 py-3 font-mono text-red-400">#${r.id}</td>
+                <td class="px-4 py-3 font-mono text-amber-400">#${r.saleId}</td>
+                <td class="px-4 py-3 text-white">${r.customerName}</td>
+                <td class="px-4 py-3 text-slate-300 text-sm">${r.cashierName}</td>
+                <td class="px-4 py-3"><span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full">${r.reason}</span></td>
+                <td class="px-4 py-3 text-red-400 font-bold">-${r.total.toLocaleString()} ${state.settings.currency}</td>
+                <td class="px-4 py-3 text-slate-400 text-sm">${new Date(r.date).toLocaleString('ar-EG')}</td>
+                <td class="px-4 py-3">
+                  <button onclick="showReturnReceipt(${r.id})" class="p-1.5 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </button>
+                </td>
+              </tr>
+            `).join('') : `<tr><td colspan="8" class="px-4 py-10 text-center text-slate-500">لا توجد استرجاعات</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ============ PRODUCTS ============
+let editingProductId = null;
+
+function renderProducts() {
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <select id="filterCategory" onchange="renderProductsTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+          <option value="">كل الأصناف</option>
+          ${[...new Set(state.products.map(p=>p.category))].map(c => `<option value="${c}">${c}</option>`).join('')}
+        </select>
+        <div class="flex gap-2">
+          ${hasPermission('barcodePrint') ? `<button onclick="showPage('barcodePrint')" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm transition">طباعة الباركود</button>` : ''}
+          <button onclick="openProductModal()" class="gold-gradient text-slate-900 font-bold px-5 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            إضافة منتج
+          </button>
+        </div>
+      </div>
+      <div class="card-gradient border border-slate-700 rounded-2xl overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-slate-800/50">
+            <tr class="text-right">
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">المنتج</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الباركود</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">عدد القطع</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">سعر البيع</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الحالة</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="productsTable" class="divide-y divide-slate-700"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  renderProductsTable();
+}
+
+function renderProductsTable() {
+  const filter = document.getElementById('filterCategory')?.value || '';
+  const filtered = filter ? state.products.filter(p => p.category === filter) : state.products;
+  document.getElementById('productsTable').innerHTML = filtered.length ? filtered.map(p => `
+    <tr class="hover:bg-slate-800/30 transition">
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">${p.image || '📦'}</span>
+          <div><span class="font-semibold text-white">${p.name}</span><div class="text-xs text-slate-500">${p.category}</div></div>
+        </div>
+      </td>
+      <td class="px-4 py-3 font-mono text-xs text-slate-400">${p.barcode || '—'}</td>
+      <td class="px-4 py-3"><div class="flex items-center gap-2"><span class="text-white font-bold">${p.qty}</span><span class="text-xs text-slate-500">/ ${(p.pieceCodes?.length || 0)} كود</span></div></td>
+      <td class="px-4 py-3 text-amber-400 font-semibold">${p.price.toLocaleString()} ${state.settings.currency}</td>
+      <td class="px-4 py-3">${p.qty <= p.min ? '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full">منخفض</span>' : '<span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">متوفر</span>'}</td>
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-2">
+          <button onclick="editProduct(${p.id})" class="p-1.5 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </button>
+          <button onclick="deleteProduct(${p.id})" class="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" class="px-4 py-10 text-center text-slate-500">لا توجد منتجات</td></tr>`;
+}
+
+function openProductModal() {
+  editingProductId = null;
+  showModal('إضافة منتج', `
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">اسم المنتج</label>
+        <input type="text" id="p-name" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">الصنف</label>
+          <select id="p-category" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+            <option value="زيوت">زيوت المحرك</option>
+            <option value="فلاتر">فلاتر</option>
+            <option value="إكسسوارات">إكسسوارات</option>
+            <option value="فوسفور">فوسفور</option>
+            <option value="إطارات">إطارات</option>
+            <option value="بطاريات">بطاريات</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">الأيقونة</label>
+          <select id="p-image" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+            <option value="📦">📦 صندوق</option>
+            <option value="🛢️">🛢️ زيت</option>
+            <option value="🔧">🔧 أداة</option>
+            <option value="💡">💡 فوسفور</option>
+            <option value="🚗">🚗 سيارة</option>
+            <option value="🌸">🌸 معطر</option>
+            <option value="⚫">⚫ إطار</option>
+            <option value="🔋">🔋 بطارية</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">الكمية</label>
+        <input type="number" id="p-qty" min="1" value="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500">
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div><label class="block text-sm text-slate-400 mb-2">سعر الشراء</label><input type="number" id="p-cost" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+        <div><label class="block text-sm text-slate-400 mb-2">سعر البيع</label><input type="number" id="p-price" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+        <div><label class="block text-sm text-slate-400 mb-2">الحد الأدنى</label><input type="number" id="p-min" value="5" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+      </div>
+      <button onclick="saveProduct()" class="w-full gold-gradient text-slate-900 font-bold py-3 rounded-lg hover:opacity-90 transition">حفظ المنتج</button>
+    </div>
+  `);
+}
+
+function editProduct(id) {
+  const p = state.products.find(x => x.id === id);
+  if (!p) return;
+  editingProductId = id;
+  openProductModal();
+  setTimeout(() => {
+    document.getElementById('p-name').value = p.name;
+    document.getElementById('p-category').value = p.category;
+    document.getElementById('p-image').value = p.image || '📦';
+    document.getElementById('p-qty').value = p.qty;
+    document.getElementById('p-cost').value = p.cost;
+    document.getElementById('p-price').value = p.price;
+    document.getElementById('p-min').value = p.min;
+    document.querySelector('#modalContainer h3').textContent = 'تعديل المنتج';
+  }, 50);
+}
+
+function saveProduct() {
+  const name = document.getElementById('p-name').value.trim();
+  const qty = parseInt(document.getElementById('p-qty').value) || 0;
+  const cost = parseFloat(document.getElementById('p-cost').value) || 0;
+  const price = parseFloat(document.getElementById('p-price').value) || 0;
+  const min = parseInt(document.getElementById('p-min').value) || 5;
+  const category = document.getElementById('p-category').value;
+  const image = document.getElementById('p-image').value;
+  if (!name || price <= 0) { toast('الرجاء إدخال البيانات المطلوبة', true); return; }
+  if (qty < 1) { toast('الرجاء إدخال كمية صحيحة', true); return; }
+  
+  if (editingProductId) {
+    const p = state.products.find(x => x.id === editingProductId);
+    const oldQty = p.qty;
+    Object.assign(p, { name, category, image, cost, price, min });
+    if (qty > oldQty) {
+      for (let i = oldQty + 1; i <= qty; i++) {
+        if (!p.pieceCodes) p.pieceCodes = [];
+        p.pieceCodes.push(generatePieceCode(p.barcode, p.nextPieceIndex || i));
+        p.nextPieceIndex = (p.nextPieceIndex || i) + 1;
+      }
+    } else if (qty < oldQty) {
+      if (p.pieceCodes) p.pieceCodes = p.pieceCodes.slice(0, qty);
+    }
+    p.qty = qty;
+    logActivity('تعديل منتج', `تم تعديل: ${name}`);
+  } else {
+    const barcode = generateProductBarcode();
+    const pieceCodes = [];
+    for (let i = 1; i <= qty; i++) pieceCodes.push(generatePieceCode(barcode, i));
+    state.products.push({ id: Date.now(), name, barcode, category, image, qty, cost, price, min, pieceCodes, nextPieceIndex: qty + 1 });
+    logActivity('إضافة منتج', `تم إضافة: ${name} (${qty} قطعة)`);
+  }
+  save();
+  closeModal();
+  renderProductsTable();
+  toast('تم حفظ المنتج بنجاح');
+}
+
+function deleteProduct(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+  const p = state.products.find(x => x.id === id);
+  state.products = state.products.filter(x => x.id !== id);
+  logActivity('حذف منتج', `تم حذف: ${p?.name || id}`);
+  save();
+  renderProductsTable();
+  toast('تم حذف المنتج');
+}
+
+// ============ SALES ============
+function renderSales() {
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <input type="date" id="filterDate" onchange="renderSalesTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+          <select id="filterStatus" onchange="renderSalesTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+            <option value="">كل الحالات</option>
+            <option value="مكتملة">مكتملة</option>
+            <option value="مسترجعة">مسترجعة</option>
+            <option value="مسترجعة جزئياً">مسترجعة جزئياً</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-gradient border border-slate-700 rounded-2xl overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-slate-800/50">
+            <tr class="text-right">
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">رقم الفاتورة</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">العميل</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الكاشير</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">التاريخ</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الإجمالي</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الحالة</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="salesTable" class="divide-y divide-slate-700"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  renderSalesTable();
+}
+
+function renderSalesTable() {
+  const dateFilter = document.getElementById('filterDate')?.value;
+  const statusFilter = document.getElementById('filterStatus')?.value;
+  let filtered = [...state.sales].sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (dateFilter) filtered = filtered.filter(s => new Date(s.date).toISOString().startsWith(dateFilter));
+  if (statusFilter) filtered = filtered.filter(s => s.status === statusFilter);
+  
+  document.getElementById('salesTable').innerHTML = filtered.length ? filtered.map(s => {
+    const statusColor = s.status === 'مكتملة' ? 'bg-green-500/20 text-green-400' : s.status === 'مسترجعة' ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/20 text-orange-400';
+    return `
+    <tr class="hover:bg-slate-800/30 transition ${s.status === 'مسترجعة' ? 'opacity-60' : ''}">
+      <td class="px-4 py-3 font-mono text-amber-400">#${s.id}</td>
+      <td class="px-4 py-3 text-white font-semibold">${s.customerName}</td>
+      <td class="px-4 py-3 text-slate-300 text-sm">${s.cashierName}</td>
+      <td class="px-4 py-3 text-slate-400 text-sm">${new Date(s.date).toLocaleString('ar-EG')}</td>
+      <td class="px-4 py-3 text-amber-400 font-bold">${s.total.toLocaleString()} ${state.settings.currency}</td>
+      <td class="px-4 py-3"><span class="text-xs ${statusColor} px-2 py-1 rounded-full">${s.status}</span></td>
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-2">
+          <button onclick="viewSaleReceipt(${s.id})" class="p-1.5 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition" title="عرض">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </button>
+          ${s.status === 'مكتملة' ? `
+            <button onclick="openReturnModal(${s.id})" class="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition" title="استرجاع">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+            </button>
+          ` : ''}
+          <button onclick="printSaleReceipt(${s.id})" class="p-1.5 bg-amber-500/20 text-amber-400 rounded hover:bg-amber-500/30 transition" title="طباعة">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `;}).join('') : `<tr><td colspan="7" class="px-4 py-10 text-center text-slate-500">لا توجد مبيعات</td></tr>`;
+}
+
+// ============ CUSTOMERS ============
+let editingCustomerId = null;
+
+function renderCustomers() {
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <input type="text" id="searchCustomer" oninput="renderCustomersGrid()" placeholder="بحث..." class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-amber-500 w-64">
+        <button onclick="openCustomerModal()" class="gold-gradient text-slate-900 font-bold px-5 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          إضافة عميل
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="customersGrid"></div>
+    </div>
+  `;
+  renderCustomersGrid();
+}
+
+function renderCustomersGrid() {
+  const q = (document.getElementById('searchCustomer')?.value || '').toLowerCase();
+  const filtered = state.customers.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  document.getElementById('customersGrid').innerHTML = filtered.length ? filtered.map(c => `
+    <div class="card-gradient border border-slate-700 rounded-2xl p-5 hover:border-amber-500 transition">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 gold-gradient rounded-full flex items-center justify-center font-bold text-slate-900 text-lg">${c.name.charAt(0)}</div>
+          <div><p class="font-bold text-white">${c.name}</p><p class="text-xs text-slate-400">${c.phone}</p></div>
+        </div>
+        <div class="flex gap-1">
+          <button onclick="editCustomer(${c.id})" class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+          <button onclick="deleteCustomer(${c.id})" class="p-1.5 text-red-400 hover:bg-red-500/20 rounded"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        </div>
+      </div>
+      <div class="space-y-2 text-sm">
+        <div class="flex items-center gap-2 text-slate-300"><span>🚗 ${c.car || 'لا توجد سيارة'}</span></div>
+        <div class="flex items-center gap-2 text-amber-400 font-semibold"><span>💰 ${(c.totalPurchases || 0).toLocaleString()} ${state.settings.currency}</span></div>
+      </div>
+    </div>
+  `).join('') : '<p class="text-slate-500 text-center py-10 col-span-3">لا يوجد عملاء</p>';
+}
+
+function openCustomerModal() {
+  editingCustomerId = null;
+  showModal('إضافة عميل', `
+    <div class="space-y-4">
+      <div><label class="block text-sm text-slate-400 mb-2">اسم العميل</label><input type="text" id="c-name" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+      <div><label class="block text-sm text-slate-400 mb-2">رقم الهاتف</label><input type="text" id="c-phone" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+      <div><label class="block text-sm text-slate-400 mb-2">نوع السيارة</label><input type="text" id="c-car" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+      <div><label class="block text-sm text-slate-400 mb-2">ملاحظات</label><textarea id="c-notes" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></textarea></div>
+      <button onclick="saveCustomer()" class="w-full gold-gradient text-slate-900 font-bold py-3 rounded-lg hover:opacity-90 transition">حفظ</button>
+    </div>
+  `);
+}
+
+function editCustomer(id) {
+  const c = state.customers.find(x => x.id === id);
+  if (!c) return;
+  editingCustomerId = id;
+  openCustomerModal();
+  setTimeout(() => {
+    document.getElementById('c-name').value = c.name;
+    document.getElementById('c-phone').value = c.phone;
+    document.getElementById('c-car').value = c.car || '';
+    document.getElementById('c-notes').value = c.notes || '';
+    document.querySelector('#modalContainer h3').textContent = 'تعديل عميل';
+  }, 50);
+}
+
+function saveCustomer() {
+  const name = document.getElementById('c-name').value.trim();
+  const phone = document.getElementById('c-phone').value.trim();
+  const car = document.getElementById('c-car').value.trim();
+  const notes = document.getElementById('c-notes').value.trim();
+  if (!name) { toast('الرجاء إدخال اسم العميل', true); return; }
+  if (editingCustomerId) {
+    const c = state.customers.find(x => x.id === editingCustomerId);
+    Object.assign(c, { name, phone, car, notes });
+  } else {
+    state.customers.push({ id: Date.now(), name, phone, car, notes, totalPurchases: 0 });
+  }
+  save();
+  closeModal();
+  renderCustomersGrid();
+  toast('تم حفظ العميل بنجاح');
+}
+
+function deleteCustomer(id) {
+  if (!confirm('هل أنت متأكد؟')) return;
+  state.customers = state.customers.filter(x => x.id !== id);
+  save();
+  renderCustomersGrid();
+  toast('تم حذف العميل');
+}
+
+// ============ INVENTORY ============
+function renderInventory() {
+  const total = state.products.length;
+  const units = state.products.reduce((s, p) => s + p.qty, 0);
+  const value = state.products.reduce((s, p) => s + (p.qty * p.cost), 0);
+  const totalPieces = state.products.reduce((s, p) => s + (p.pieceCodes?.length || 0), 0);
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5"><p class="text-slate-400 text-sm">المنتجات</p><p class="text-3xl font-bold text-white mt-2">${total}</p></div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5"><p class="text-slate-400 text-sm">القطع</p><p class="text-3xl font-bold text-white mt-2">${units.toLocaleString()}</p></div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5"><p class="text-slate-400 text-sm">أكواد الباركود</p><p class="text-3xl font-bold text-amber-400 mt-2">${totalPieces.toLocaleString()}</p></div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5"><p class="text-slate-400 text-sm">قيمة المخزون</p><p class="text-3xl font-bold text-green-400 mt-2">${value.toLocaleString()} ${state.settings.currency}</p></div>
+      </div>
+      <div class="card-gradient border border-slate-700 rounded-2xl overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-slate-800/50">
+            <tr class="text-right">
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">المنتج</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الكمية</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الأكواد</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">الحالة</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">إجراء</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700">
+            ${state.products.map(p => {
+              const pct = p.min > 0 ? Math.min((p.qty / (p.min * 3)) * 100, 100) : 100;
+              const color = p.qty <= p.min ? 'bg-red-500' : p.qty <= p.min * 2 ? 'bg-orange-500' : 'bg-green-500';
+              return `<tr class="hover:bg-slate-800/30 transition">
+                <td class="px-4 py-3"><div class="flex items-center gap-3"><span class="text-2xl">${p.image || '📦'}</span><div><div class="font-semibold text-white">${p.name}</div><div class="text-xs text-slate-500">${p.category}</div></div></div></td>
+                <td class="px-4 py-3"><div class="flex items-center gap-3"><div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden"><div class="${color} h-full rounded-full" style="width:${pct}%"></div></div><span class="text-white font-bold w-12 text-left">${p.qty}</span></div></td>
+                <td class="px-4 py-3"><span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full">${p.pieceCodes?.length || 0} كود</span></td>
+                <td class="px-4 py-3">${p.qty <= p.min ? '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full">⚠ منخفض</span>' : '<span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">✓ جيد</span>'}</td>
+                <td class="px-4 py-3"><button onclick="restock(${p.id})" class="text-xs bg-amber-500/20 text-amber-400 px-3 py-1.5 rounded-lg hover:bg-amber-500/30 transition">+ إضافة كمية</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function restock(id) {
+  const qty = prompt('أدخل الكمية المراد إضافتها:');
+  if (!qty || isNaN(qty) || parseInt(qty) < 1) return;
+  const p = state.products.find(x => x.id === id);
+  if (p) {
+    const addQty = parseInt(qty);
+    const startIdx = (p.nextPieceIndex || p.qty + 1);
+    if (!p.pieceCodes) p.pieceCodes = [];
+    for (let i = 0; i < addQty; i++) {
+      p.pieceCodes.push(generatePieceCode(p.barcode, startIdx + i));
+    }
+    p.nextPieceIndex = startIdx + addQty;
+    p.qty += addQty;
+    logActivity('إعادة تعبئة', `تمت إضافة ${addQty} إلى ${p.name}`);
+    save();
+    renderInventory();
+    toast(`تمت إضافة ${addQty} قطعة`);
+  }
+}
+
+// ============ REPORTS ============
+function renderReports() {
+  const today = new Date();
+  const todayStr = today.toDateString();
+  const thisMonth = today.getMonth();
+  const thisYear = today.getFullYear();
+  const activeSales = state.sales.filter(s => s.status !== 'مسترجعة');
+  const todaySales = activeSales.filter(s => new Date(s.date).toDateString() === todayStr);
+  const monthSales = activeSales.filter(s => { const d = new Date(s.date); return d.getMonth() === thisMonth && d.getFullYear() === thisYear; });
+  const todayTotal = todaySales.reduce((s, x) => s + x.total, 0);
+  const monthTotal = monthSales.reduce((s, x) => s + x.total, 0);
+  const allTotal = activeSales.reduce((s, x) => s + x.total, 0);
+  const allCost = activeSales.reduce((s, sale) => s + sale.items.reduce((ss, it) => {
+    const p = state.products.find(pp => pp.id === it.productId);
+    return ss + (p ? p.cost * it.qty : 0);
+  }, 0), 0);
+  const profit = allTotal - allCost;
+  const totalReturns = state.returns.reduce((s, r) => s + r.total, 0);
+  
+  const cashierMap = {};
+  activeSales.forEach(s => {
+    if (!cashierMap[s.cashierName]) cashierMap[s.cashierName] = { count: 0, total: 0 };
+    cashierMap[s.cashierName].count++;
+    cashierMap[s.cashierName].total += s.total;
+  });
+  
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <h3 class="text-lg font-bold text-white mb-4">ملخص المبيعات</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"><span class="text-slate-300">مبيعات اليوم</span><span class="font-bold text-white">${todayTotal.toLocaleString()} ${state.settings.currency}</span></div>
+            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"><span class="text-slate-300">مبيعات الشهر</span><span class="font-bold text-white">${monthTotal.toLocaleString()} ${state.settings.currency}</span></div>
+            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"><span class="text-slate-300">إجمالي المبيعات</span><span class="font-bold text-amber-400">${allTotal.toLocaleString()} ${state.settings.currency}</span></div>
+            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"><span class="text-slate-300">صافي الربح</span><span class="font-bold text-green-400">${profit.toLocaleString()} ${state.settings.currency}</span></div>
+            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"><span class="text-slate-300">إجمالي الاسترجاعات</span><span class="font-bold text-red-400">${totalReturns.toLocaleString()} ${state.settings.currency}</span></div>
+          </div>
+        </div>
+        <div class="card-gradient border border-slate-700 rounded-2xl p-5">
+          <h3 class="text-lg font-bold text-white mb-4">أداء الكاشير</h3>
+          <div class="space-y-3">
+            ${Object.entries(cashierMap).map(([name, data]) => `
+              <div class="p-3 bg-slate-800/50 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-white font-semibold">${name}</span>
+                  <span class="text-amber-400 font-bold">${data.total.toLocaleString()} ${state.settings.currency}</span>
+                </div>
+                <p class="text-xs text-slate-400">${data.count} فاتورة</p>
+              </div>
+            `).join('') || '<p class="text-slate-500 text-sm text-center py-4">لا توجد بيانات</p>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============ USERS ============
+let editingUserId = null;
+
+function renderUsers() {
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <p class="text-slate-400 text-sm">إجمالي: <span class="text-white font-bold">${state.users.length}</span></p>
+        <button onclick="openUserModal()" class="gold-gradient text-slate-900 font-bold px-5 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          إضافة مستخدم
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        ${state.users.map(u => {
+          const roleInfo = ROLE_PRESETS[u.role] || { label: u.role, color: 'bg-slate-500/20 text-slate-400' };
+          const userSales = state.sales.filter(s => s.cashierId === u.id).length;
+          return `
+            <div class="card-gradient border border-slate-700 rounded-2xl p-5 hover:border-amber-500 transition">
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-14 h-14 gold-gradient rounded-full flex items-center justify-center font-bold text-slate-900 text-xl">${u.fullName.charAt(0)}</div>
+                  <div>
+                    <p class="font-bold text-white text-lg">${u.fullName}</p>
+                    <p class="text-xs text-slate-400">@${u.username}</p>
+                    <span class="role-badge ${roleInfo.color} inline-block mt-1">${roleInfo.label}</span>
+                  </div>
+                </div>
+                ${u.id !== currentUser.id ? `
+                  <div class="flex gap-1">
+                    <button onclick="editUser(${u.id})" class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+                    <button onclick="deleteUser(${u.id})" class="p-1.5 text-red-400 hover:bg-red-500/20 rounded"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                  </div>
+                ` : '<span class="text-xs text-amber-400">أنت</span>'}
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-3">
+                <div class="bg-slate-800/50 rounded-lg p-2 text-center"><p class="text-xs text-slate-400">المبيعات</p><p class="text-lg font-bold text-white">${userSales}</p></div>
+                <div class="bg-slate-800/50 rounded-lg p-2 text-center"><p class="text-xs text-slate-400">الصلاحيات</p><p class="text-lg font-bold text-white">${u.permissions.length}</p></div>
+                <div class="bg-slate-800/50 rounded-lg p-2 text-center"><p class="text-xs text-slate-400">الحالة</p><p class="text-lg font-bold ${u.active ? 'text-green-400' : 'text-red-400'}">${u.active ? '✓' : '✗'}</p></div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function openUserModal() {
+  editingUserId = null;
+  const permsHtml = Object.entries(PERMISSIONS).map(([key, val]) => `
+    <label class="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-800">
+      <input type="checkbox" class="user-perm" value="${key}" checked>
+      <span class="text-sm text-slate-300">${val.label}</span>
+    </label>
+  `).join('');
+  showModal('إضافة مستخدم', `
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-sm text-slate-400 mb-2">الاسم الكامل</label><input type="text" id="u-fullname" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+        <div><label class="block text-sm text-slate-400 mb-2">اسم المستخدم</label><input type="text" id="u-username" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-sm text-slate-400 mb-2">كلمة المرور</label><input type="text" id="u-password" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+        <div><label class="block text-sm text-slate-400 mb-2">الدور</label><select id="u-role" onchange="applyRolePreset()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"><option value="">— مخصص —</option>${Object.entries(ROLE_PRESETS).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')}</select></div>
+      </div>
+      <div><label class="block text-sm text-slate-400 mb-2">الصلاحيات التفصيلية</label><div class="grid grid-cols-2 gap-2">${permsHtml}</div></div>
+      <label class="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg cursor-pointer"><input type="checkbox" id="u-active" checked><span class="text-sm text-slate-300">الحساب مفعل</span></label>
+      <button onclick="saveUser()" class="w-full gold-gradient text-slate-900 font-bold py-3 rounded-lg hover:opacity-90 transition">حفظ</button>
+    </div>
+  `);
+}
+
+function applyRolePreset() {
+  const role = document.getElementById('u-role').value;
+  if (!role) return;
+  const perms = ROLE_PRESETS[role].permissions;
+  document.querySelectorAll('.user-perm').forEach(cb => { cb.checked = perms.includes(cb.value); });
+}
+
+function editUser(id) {
+  const u = state.users.find(x => x.id === id);
+  if (!u) return;
+  editingUserId = id;
+  openUserModal();
+  setTimeout(() => {
+    document.getElementById('u-fullname').value = u.fullName;
+    document.getElementById('u-username').value = u.username;
+    document.getElementById('u-password').value = u.password;
+    document.getElementById('u-active').checked = u.active;
+    document.querySelectorAll('.user-perm').forEach(cb => { cb.checked = u.permissions.includes(cb.value); });
+    document.querySelector('#modalContainer h3').textContent = 'تعديل مستخدم';
+  }, 50);
+}
+
+function saveUser() {
+  const fullName = document.getElementById('u-fullname').value.trim();
+  const username = document.getElementById('u-username').value.trim();
+  const password = document.getElementById('u-password').value;
+  const active = document.getElementById('u-active').checked;
+  const permissions = Array.from(document.querySelectorAll('.user-perm:checked')).map(cb => cb.value);
+  if (!fullName || !username || !password) { toast('الرجاء إدخال جميع البيانات', true); return; }
+  if (permissions.length === 0) { toast('الرجاء تحديد صلاحية واحدة على الأقل', true); return; }
+  const existing = state.users.find(u => u.username === username && u.id !== editingUserId);
+  if (existing) { toast('اسم المستخدم موجود بالفعل', true); return; }
+  if (editingUserId) {
+    const u = state.users.find(x => x.id === editingUserId);
+    Object.assign(u, { fullName, username, password, active, permissions });
+  } else {
+    state.users.push({ id: Date.now(), fullName, username, password, active, permissions, role: 'custom', createdAt: new Date().toISOString(), createdBy: currentUser.fullName });
+  }
+  save();
+  closeModal();
+  renderUsers();
+  toast('تم حفظ المستخدم بنجاح');
+}
+
+function deleteUser(id) {
+  if (id === currentUser.id) { toast('لا يمكنك حذف حسابك', true); return; }
+  if (!confirm('هل أنت متأكد؟')) return;
+  state.users = state.users.filter(x => x.id !== id);
+  save();
+  renderUsers();
+  toast('تم حذف المستخدم');
+}
+
+// ============ ACTIVITY ============
+function renderActivity() {
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <select id="actUserFilter" onchange="renderActivityTable()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+            <option value="">كل المستخدمين</option>
+            ${state.users.map(u => `<option value="${u.id}">${u.fullName}</option>`).join('')}
+          </select>
+        </div>
+        <p class="text-sm text-slate-400">إجمالي: <span class="text-white font-bold">${state.activityLog.length}</span></p>
+      </div>
+      <div class="card-gradient border border-slate-700 rounded-2xl overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-slate-800/50">
+            <tr class="text-right">
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">المستخدم</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">العملية</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">التفاصيل</th>
+              <th class="px-4 py-3 text-xs font-semibold text-slate-400">التاريخ</th>
+            </tr>
+          </thead>
+          <tbody id="activityTable" class="divide-y divide-slate-700"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  renderActivityTable();
+}
+
+function renderActivityTable() {
+  const userFilter = document.getElementById('actUserFilter')?.value;
+  let logs = [...state.activityLog];
+  if (userFilter) logs = logs.filter(a => a.userId == userFilter);
+  document.getElementById('activityTable').innerHTML = logs.length ? logs.slice(0, 100).map(a => `
+    <tr class="hover:bg-slate-800/30 transition">
+      <td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-8 h-8 gold-gradient rounded-full flex items-center justify-center font-bold text-slate-900 text-xs">${a.userName.charAt(0)}</div><span class="text-white text-sm">${a.userName}</span></div></td>
+      <td class="px-4 py-3"><span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full">${a.action}</span></td>
+      <td class="px-4 py-3 text-slate-400 text-sm max-w-xs truncate">${a.details || '—'}</td>
+      <td class="px-4 py-3 text-slate-400 text-sm">${new Date(a.timestamp).toLocaleString('ar-EG')}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="4" class="px-4 py-10 text-center text-slate-500">لا توجد نشاطات</td></tr>`;
+}
+
+// ============ SETTINGS ============
+function renderSettings() {
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="card-gradient border border-slate-700 rounded-2xl p-6 max-w-2xl mb-6">
+        <h3 class="text-lg font-bold text-white mb-5">إعدادات المحل</h3>
+        <div class="space-y-4">
+          <div><label class="block text-sm text-slate-400 mb-2">اسم المحل</label><input type="text" id="shopName" value="${state.settings.name}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+          <div><label class="block text-sm text-slate-400 mb-2">العنوان</label><input type="text" id="shopAddress" value="${state.settings.address}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+          <div><label class="block text-sm text-slate-400 mb-2">رقم الهاتف</label><input type="text" id="shopPhone" value="${state.settings.phone || ''}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+          <div><label class="block text-sm text-slate-400 mb-2">العملة</label><input type="text" id="shopCurrency" value="${state.settings.currency}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+          <div><label class="block text-sm text-slate-400 mb-2">رسالة الفاتورة</label><input type="text" id="shopReceiptMsg" value="${state.settings.receiptMessage || ''}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+          <button onclick="saveSettings()" class="gold-gradient text-slate-900 font-bold px-6 py-2 rounded-lg hover:opacity-90 transition">حفظ</button>
+        </div>
+      </div>
+      <div class="card-gradient border border-red-500/30 rounded-2xl p-6 max-w-2xl">
+        <h3 class="text-lg font-bold text-red-400 mb-2">منطقة الخطر</h3>
+        <button onclick="resetData()" class="bg-red-500/20 text-red-400 border border-red-500/30 px-6 py-2 rounded-lg hover:bg-red-500/30 transition">إعادة تعيين البيانات</button>
+      </div>
+    </div>
+  `;
+}
+
+function saveSettings() {
+  state.settings.name = document.getElementById('shopName').value;
+  state.settings.address = document.getElementById('shopAddress').value;
+  state.settings.phone = document.getElementById('shopPhone').value;
+  state.settings.currency = document.getElementById('shopCurrency').value;
+  state.settings.receiptMessage = document.getElementById('shopReceiptMsg').value;
+  save();
+  toast('تم حفظ الإعدادات');
+}
+
+function resetData() {
+  if (!confirm('هل أنت متأكد؟ سيتم حذف جميع البيانات!')) return;
+  if (!confirm('تأكيد نهائي!')) return;
+  localStorage.removeItem('salahDeebShop_v7');
+  location.reload();
+}
+
+// ============ BARCODE PRINT ============
+let barcodePrintState = { selectedProducts: {}, labelSize: 'normal' };
+
+function renderBarcodePrint() {
+  barcodePrintState.selectedProducts = {};
+  state.products.forEach(p => { barcodePrintState.selectedProducts[p.id] = { all: true, copies: 1 }; });
+  
+  document.getElementById('pageContainer').innerHTML = `
+    <div class="fade-in">
+      <div class="card-gradient border border-amber-500/30 rounded-2xl p-5 mb-6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-14 h-14 gold-gradient rounded-xl flex items-center justify-center">
+            <svg class="w-7 h-7 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14M21 5v14"/></svg>
+          </div>
+          <div><h3 class="text-xl font-bold text-white">طباعة ملصقات الباركود</h3><p class="text-sm text-slate-400">كل قطعة لها كود فريد</p></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+          <div class="bg-slate-800/50 rounded-lg p-3"><p class="text-xs text-slate-400">المنتجات</p><p class="text-2xl font-bold text-white">${state.products.length}</p></div>
+          <div class="bg-slate-800/50 rounded-lg p-3"><p class="text-xs text-slate-400">القطع</p><p class="text-2xl font-bold text-amber-400">${state.products.reduce((s,p)=>s+(p.pieceCodes?.length||0),0).toLocaleString()}</p></div>
+          <div class="bg-slate-800/50 rounded-lg p-3"><p class="text-xs text-slate-400">الملصقات المختارة</p><p class="text-2xl font-bold text-green-400" id="selectedLabelsCount">0</p></div>
+        </div>
+      </div>
+      <div class="card-gradient border border-slate-700 rounded-2xl p-5 mb-6">
+        <h3 class="text-lg font-bold text-white mb-4">إعدادات الطباعة</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div><label class="block text-sm text-slate-400 mb-2">حجم الملصق</label><select id="labelSize" onchange="barcodePrintState.labelSize = this.value; updateSelectedCount();" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"><option value="normal">عادي</option><option value="large">كبير</option></select></div>
+          <div><label class="block text-sm text-slate-400 mb-2">عدد النسخ</label><input type="number" id="globalCopies" value="1" min="1" max="20" onchange="applyGlobalCopies(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-500"></div>
+          <div class="flex items-end gap-2"><button onclick="selectAllProducts()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm transition">تحديد الكل</button><button onclick="deselectAllProducts()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm transition">إلغاء</button></div>
+        </div>
+      </div>
+      <div class="card-gradient border border-slate-700 rounded-2xl p-5 mb-6">
+        <h3 class="text-lg font-bold text-white mb-4">اختيار المنتجات</h3>
+        <div class="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin" id="barcodeProductsList"></div>
+      </div>
+      <div class="card-gradient border border-amber-500/30 rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h3 class="text-lg font-bold text-white">معاينة</h3>
+          <div class="flex gap-2">
+            <button onclick="generatePreview()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm transition">تحديث</button>
+            <button onclick="printSelectedBarcodes()" class="gold-gradient text-slate-900 font-bold px-6 py-2 rounded-lg hover:opacity-90 transition">طباعة</button>
+          </div>
+        </div>
+        <div id="labelsPreviewContainer" class="labels-preview"><p class="text-slate-500 text-sm py-10">اضغط "تحديث المعاينة"</p></div>
+      </div>
+    </div>
+  `;
+  renderBarcodeProductsList();
+  updateSelectedCount();
+}
+
+function renderBarcodeProductsList() {
+  const list = document.getElementById('barcodeProductsList');
+  list.innerHTML = state.products.map(p => {
+    const piecesCount = p.pieceCodes?.length || 0;
+    const sel = barcodePrintState.selectedProducts[p.id];
+    return `
+      <label class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-800 transition">
+        <input type="checkbox" class="barcode-product-check w-5 h-5 accent-amber-500" value="${p.id}" ${sel.all ? 'checked' : ''} onchange="toggleProductSelection(${p.id}, this.checked)">
+        <span class="text-2xl">${p.image || '📦'}</span>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-white truncate">${p.name}</p>
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
+            <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">${p.category}</span>
+            <span class="text-xs text-green-400">${piecesCount} قطعة</span>
+            <span class="text-xs text-amber-400 font-bold">${p.price.toLocaleString()} ${state.settings.currency}</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-slate-400">نسخ:</label>
+          <input type="number" min="1" max="20" value="${sel.copies}" data-product="${p.id}" class="product-copies w-16 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-center" onchange="updateProductCopies(${p.id}, this.value)">
+        </div>
+      </label>
+    `;
+  }).join('');
+}
+
+function toggleProductSelection(productId, checked) {
+  barcodePrintState.selectedProducts[productId].all = checked;
+  updateSelectedCount();
+}
+
+function updateProductCopies(productId, value) {
+  barcodePrintState.selectedProducts[productId].copies = Math.max(1, parseInt(value) || 1);
+  updateSelectedCount();
+}
+
+function applyGlobalCopies(value) {
+  const copies = Math.max(1, parseInt(value) || 1);
+  Object.keys(barcodePrintState.selectedProducts).forEach(pid => {
+    barcodePrintState.selectedProducts[pid].copies = copies;
+    const input = document.querySelector(`.product-copies[data-product="${pid}"]`);
+    if (input) input.value = copies;
+  });
+  updateSelectedCount();
+}
+
+function selectAllProducts() {
+  Object.keys(barcodePrintState.selectedProducts).forEach(pid => { barcodePrintState.selectedProducts[pid].all = true; });
+  document.querySelectorAll('.barcode-product-check').forEach(cb => cb.checked = true);
+  updateSelectedCount();
+}
+
+function deselectAllProducts() {
+  Object.keys(barcodePrintState.selectedProducts).forEach(pid => { barcodePrintState.selectedProducts[pid].all = false; });
+  document.querySelectorAll('.barcode-product-check').forEach(cb => cb.checked = false);
+  updateSelectedCount();
+}
+
+function updateSelectedCount() {
+  let total = 0;
+  state.products.forEach(p => {
+    const sel = barcodePrintState.selectedProducts[p.id];
+    if (!sel || !sel.all) return;
+    total += (p.pieceCodes?.length || 0) * sel.copies;
+  });
+  const el = document.getElementById('selectedLabelsCount');
+  if (el) el.textContent = total.toLocaleString();
+}
+
+function generatePreview() {
+  const previewItems = [];
+  state.products.forEach(p => {
+    const sel = barcodePrintState.selectedProducts[p.id];
+    if (!sel || !sel.all || !p.pieceCodes || p.pieceCodes.length === 0) return;
+    p.pieceCodes.forEach(pieceCode => {
+      for (let c = 0; c < sel.copies; c++) previewItems.push({ product: p, pieceCode });
+    });
+  });
+  const container = document.getElementById('labelsPreviewContainer');
+  if (previewItems.length === 0) { container.innerHTML = '<p class="text-slate-500 text-sm py-10">لم يتم اختيار أي ملصقات</p>'; return; }
+  const sizeClass = barcodePrintState.labelSize === 'large' ? 'large' : '';
+  container.innerHTML = previewItems.slice(0, 50).map((item, idx) => buildBarcodeLabelHTML(item.product, item.pieceCode, sizeClass, idx)).join('') + (previewItems.length > 50 ? `<p class="w-full text-center text-amber-400 py-3">... و ${previewItems.length - 50} ملصق آخر</p>` : '');
+  setTimeout(() => renderAllBarcodes(), 100);
+}
+
+function buildBarcodeLabelHTML(product, pieceCode, sizeClass = '', uniqueId = '') {
+  const labelId = 'bc_' + uniqueId + '_' + Math.random().toString(36).substr(2, 8);
+  return `<div class="barcode-label ${sizeClass}" data-code="${pieceCode}"><div class="bl-header"><span class="shop">${state.settings.name}</span><span>${product.category}</span></div><div class="bl-product">${product.name}</div><div class="bl-price">${product.price.toLocaleString()} ${state.settings.currency}</div><div class="bl-barcode"><svg id="${labelId}"></svg></div><div class="bl-code">${pieceCode}</div></div>`;
+}
+
+function renderAllBarcodes() {
+  document.querySelectorAll('.barcode-label').forEach(label => {
+    const svg = label.querySelector('svg');
+    const code = label.dataset.code;
+    if (!svg || !code || svg.dataset.rendered) return;
+    try {
+      JsBarcode(svg, code, { format: "CODE128", width: 1.5, height: 35, displayValue: false, margin: 0, background: "#ffffff" });
+      svg.dataset.rendered = 'true';
+    } catch (e) { console.error('Barcode error:', e); }
+  });
+}
+
+function printSelectedBarcodes() {
+  const previewItems = [];
+  state.products.forEach(p => {
+    const sel = barcodePrintState.selectedProducts[p.id];
+    if (!sel || !sel.all || !p.pieceCodes || p.pieceCodes.length === 0) return;
+    p.pieceCodes.forEach(pieceCode => {
+      for (let c = 0; c < sel.copies; c++) previewItems.push({ product: p, pieceCode });
+    });
+  });
+  if (previewItems.length === 0) { toast('الرجاء اختيار منتج', true); return; }
+  const sizeClass = barcodePrintState.labelSize === 'large' ? 'large' : '';
+  const labelsHtml = previewItems.map((item, idx) => buildBarcodeLabelHTML(item.product, item.pieceCode, sizeClass, idx)).join('');
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = `<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:3mm;">${labelsHtml}</div>`;
+  printArea.classList.remove('hidden');
+  logActivity('طباعة باركود', `تم طباعة ${previewItems.length} ملصق`);
+  save();
+  setTimeout(() => {
+    renderAllBarcodes();
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => { printArea.classList.add('hidden'); printArea.innerHTML = ''; }, 500);
+    }, 400);
+  }, 100);
+}
+
+// ============ MODAL HELPERS ============
+function showModal(title, content) {
+  const modal = document.createElement('div');
+  modal.id = 'activeModal';
+  modal.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4';
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+  modal.innerHTML = `<div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto scrollbar-thin slide-in"><div class="flex items-center justify-between mb-5"><h3 class="text-xl font-bold text-white">${title}</h3><button onclick="closeModal()" class="text-slate-400 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>${content}</div>`;
+  document.getElementById('modalContainer').innerHTML = '';
+  document.getElementById('modalContainer').appendChild(modal);
+}
+
+function closeModal() { document.getElementById('modalContainer').innerHTML = ''; }
+
+// ============ UTILS ============
+function toast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.className = `fixed bottom-6 left-6 ${isError ? 'bg-red-500' : 'bg-green-500'} text-white px-5 py-3 rounded-lg shadow-lg z-[100] flex items-center gap-2`;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 2500);
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('currentDate').textContent = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('currentTime').textContent = now.toLocaleTimeString('ar-EG');
+}
+
+// Init
+load();
+updateClock();
+setInterval(updateClock, 1000);
+document.getElementById('loginPass').addEventListener('keypress', (e) => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keypress', (e) => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
+  
